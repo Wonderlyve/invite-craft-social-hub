@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +20,7 @@ interface Event {
   date: string;
   location: string;
   description: string;
-  guestCount?: number;
+  guestCount: number;
   imageUrl: string;
 }
 
@@ -100,7 +100,7 @@ const EventsPage = () => {
               <SelectValue placeholder="Type d'événement" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tous</SelectItem>
+              <SelectItem value="all">Tous</SelectItem>
               <SelectItem value="Mariage">Mariage</SelectItem>
               <SelectItem value="Anniversaire">Anniversaire</SelectItem>
               <SelectItem value="Conférence">Conférence</SelectItem>

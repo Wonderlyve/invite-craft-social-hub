@@ -19,9 +19,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [type, setType] = useState("");
   const [date, setDate] = useState<Date>();
@@ -30,21 +32,20 @@ const CreateEventPage = () => {
 
   const createEvent = useMutation({
     mutationFn: async () => {
-      if (!title || !type || !date) {
+      if (!title || !type || !date || !user) {
         throw new Error("Veuillez remplir tous les champs obligatoires");
       }
 
       const { data, error } = await supabase
         .from("events")
-        .insert([
-          {
-            title,
-            type,
-            date: date.toISOString(),
-            location,
-            description
-          }
-        ])
+        .insert({
+          title,
+          type,
+          date: date.toISOString(),
+          location,
+          description,
+          user_id: user.id
+        })
         .select();
 
       if (error) throw error;

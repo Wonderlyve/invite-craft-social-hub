@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, UserIcon, ImageIcon } from "lucide-react";
+import { CalendarIcon, UserIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface EventCardProps {
