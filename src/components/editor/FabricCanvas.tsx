@@ -33,50 +33,57 @@ const FabricCanvas = ({ width, height }: FabricCanvasProps) => {
   const addText = () => {
     if (!canvas) return;
     
-    const text = canvas.add(new fabric.Textbox('Votre texte ici', {
-      left: 50,
-      top: 50,
-      fontFamily: 'Poppins',
-      fill: '#333',
-      fontSize: 20,
-      width: 200,
-    }));
-    
-    canvas.setActiveObject(text);
-    canvas.renderAll();
+    import('fabric').then(({ Textbox }) => {
+      const text = new Textbox('Votre texte ici', {
+        left: 50,
+        top: 50,
+        fontFamily: 'Poppins',
+        fill: '#333',
+        fontSize: 20,
+        width: 200,
+      });
+      
+      canvas.add(text);
+      canvas.setActiveObject(text);
+      canvas.renderAll();
+    });
   };
 
   const addRectangle = () => {
     if (!canvas) return;
     
-    const rect = new fabric.Rect({
-      left: 100,
-      top: 100,
-      fill: '#9b87f5',
-      width: 100,
-      height: 100,
-      opacity: 0.7,
+    import('fabric').then(({ Rect }) => {
+      const rect = new Rect({
+        left: 100,
+        top: 100,
+        fill: '#9b87f5',
+        width: 100,
+        height: 100,
+        opacity: 0.7,
+      });
+      
+      canvas.add(rect);
+      canvas.setActiveObject(rect);
+      canvas.renderAll();
     });
-    
-    canvas.add(rect);
-    canvas.setActiveObject(rect);
-    canvas.renderAll();
   };
 
   const addCircle = () => {
     if (!canvas) return;
     
-    const circle = new fabric.Circle({
-      left: 100,
-      top: 100,
-      fill: '#FEF7CD',
-      radius: 50,
-      opacity: 0.7,
+    import('fabric').then(({ Circle }) => {
+      const circle = new Circle({
+        left: 100,
+        top: 100,
+        fill: '#FEF7CD',
+        radius: 50,
+        opacity: 0.7,
+      });
+      
+      canvas.add(circle);
+      canvas.setActiveObject(circle);
+      canvas.renderAll();
     });
-    
-    canvas.add(circle);
-    canvas.setActiveObject(circle);
-    canvas.renderAll();
   };
 
   const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,10 +95,12 @@ const FabricCanvas = ({ width, height }: FabricCanvasProps) => {
     reader.onload = (event) => {
       if (!event.target?.result) return;
       
-      fabric.Image.fromURL(event.target.result.toString(), (img) => {
-        img.scaleToWidth(200);
-        canvas.add(img);
-        canvas.renderAll();
+      import('fabric').then(({ Image }) => {
+        Image.fromURL(event.target.result.toString(), (img) => {
+          img.scaleToWidth(200);
+          canvas.add(img);
+          canvas.renderAll();
+        });
       });
     };
     

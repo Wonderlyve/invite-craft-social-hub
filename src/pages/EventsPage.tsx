@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,46 +7,65 @@ import EventCard from "@/components/events/EventCard";
 import PageContainer from "@/components/layout/PageContainer";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
-// Données factices pour la démo
-const mockEvents = [
-  {
-    id: "1",
-    title: "Mariage de Sophie et Thomas",
-    type: "Mariage",
-    date: "12 Août 2023",
-    guestCount: 120,
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: "2",
-    title: "Conférence Annuelle Tech",
-    type: "Conférence",
-    date: "5 Septembre 2023",
-    guestCount: 250,
-    imageUrl: "/placeholder.svg"
-  },
-  {
-    id: "3",
-    title: "Anniversaire de Léa",
-    type: "Anniversaire",
-    date: "18 Octobre 2023",
-    guestCount: 30,
-    imageUrl: "/placeholder.svg"
-  }
-];
+interface Event {
+  id: string;
+  title: string;
+  type: string;
+  date: string;
+  location: string;
+  description: string;
+  guestCount?: number;
+  imageUrl: string;
+}
 
 const EventsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<string>("");
   
-  const filteredEvents = mockEvents.filter(event => {
+  const { data: events = [], isLoading, error } = useQuery({
+    queryKey: ['events'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*, guests:guests(count)');
+      
+      if (error) {
+        toast.error("Erreur lors du chargement des événements");
+        throw error;
+      }
+      
+      return data.map((event: any) => ({
+        id: event.id,
+        title: event.title,
+        type: event.type,
+        date: new Date(event.date).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }),
+        location: event.location,
+        description: event.description,
+        guestCount: event.guests[0]?.count || 0,
+        imageUrl: "/placeholder.svg"
+      }));
+    }
+  });
+  
+  const filteredEvents = events.filter((event: Event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType ? event.type === filterType : true;
     return matchesSearch && matchesType;
   });
+
+  if (error) {
+    console.error("Erreur lors du chargement des événements:", error);
+  }
   
   return (
     <>
@@ -90,7 +109,11 @@ const EventsPage = () => {
           </Select>
         </div>
         
-        {filteredEvents.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center my-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-invitation-purple"></div>
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-12">
             <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
               <Calendar className="h-12 w-12 text-muted-foreground" />
@@ -109,7 +132,7 @@ const EventsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.map((event) => (
+            {filteredEvents.map((event: Event) => (
               <EventCard key={event.id} {...event} />
             ))}
           </div>

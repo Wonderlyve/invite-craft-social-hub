@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string
+          date: string | null
+          description: string | null
+          id: string
+          location: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       fx_rates: {
         Row: {
           currency_code: string
@@ -29,6 +65,92 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      guests: {
+        Row: {
+          checked_in: boolean | null
+          created_at: string
+          email: string | null
+          event_id: string
+          full_name: string
+          id: string
+          share_token: string | null
+          status: string | null
+          table_name: string | null
+        }
+        Insert: {
+          checked_in?: boolean | null
+          created_at?: string
+          email?: string | null
+          event_id: string
+          full_name: string
+          id?: string
+          share_token?: string | null
+          status?: string | null
+          table_name?: string | null
+        }
+        Update: {
+          checked_in?: boolean | null
+          created_at?: string
+          email?: string | null
+          event_id?: string
+          full_name?: string
+          id?: string
+          share_token?: string | null
+          status?: string | null
+          table_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          canvas_data: Json
+          created_at: string
+          event_id: string
+          id: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          canvas_data: Json
+          created_at?: string
+          event_id: string
+          id?: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          canvas_data?: Json
+          created_at?: string
+          event_id?: string
+          id?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -60,6 +182,39 @@ export type Database = {
           phone_number?: string | null
           role?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          canvas_data: Json
+          category: string
+          created_at: string
+          id: string
+          is_public: boolean | null
+          name: string
+          preview_image_url: string | null
+          user_id: string | null
+        }
+        Insert: {
+          canvas_data: Json
+          category: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          name: string
+          preview_image_url?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          canvas_data?: Json
+          category?: string
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          preview_image_url?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
