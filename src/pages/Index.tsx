@@ -4,13 +4,11 @@ import FeatureCard from "@/components/home/FeatureCard";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ImageIcon, Users, Calendar, Share } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import PageContainer from "@/components/layout/PageContainer";
 
 const Index = () => {
   return (
-    <>
-      <Navbar />
+    <PageContainer className="p-0">
       <main>
         <HeroSection />
 
@@ -125,8 +123,7 @@ const Index = () => {
           </div>
         </section>
       </main>
-      <Footer />
-    </>
+    </PageContainer>
   );
 };
 
