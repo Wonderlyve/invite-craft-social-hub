@@ -13,6 +13,7 @@ import CreateEventPage from "./pages/CreateEventPage";
 import DesignsPage from "./pages/DesignsPage";
 import EditorPage from "./pages/EditorPage";
 import GuestsPage from "./pages/GuestsPage";
+import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/about" element={<AboutPage />} />
             
             <Route 
               path="/events" 
@@ -49,11 +51,7 @@ const App = () => (
             
             <Route 
               path="/designs" 
-              element={
-                <ProtectedRoute>
-                  <DesignsPage />
-                </ProtectedRoute>
-              } 
+              element={<DesignsPage />} 
             />
             
             <Route 
@@ -74,7 +72,6 @@ const App = () => (
               } 
             />
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

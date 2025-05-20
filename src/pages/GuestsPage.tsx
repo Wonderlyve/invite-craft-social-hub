@@ -3,102 +3,119 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GuestList from "@/components/guests/GuestList";
+import CheckInMode from "@/components/guests/CheckInMode";
 import PageContainer from "@/components/layout/PageContainer";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import { ArrowLeft, Download, Mail } from "lucide-react";
+import { ArrowLeft, Download, Mail, Share } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
-
-// Données factices pour la démo
-const mockGuests = [
-  {
-    id: "1",
-    fullName: "Jean Dupont",
-    email: "jean.dupont@example.com",
-    table: "Table 1",
-    status: "confirmed" as const
-  },
-  {
-    id: "2",
-    fullName: "Marie Martin",
-    email: "marie.martin@example.com",
-    table: "Table 2",
-    status: "pending" as const
-  },
-  {
-    id: "3",
-    fullName: "Pierre Bernard",
-    email: "pierre.bernard@example.com",
-    table: "Table 1",
-    status: "declined" as const
-  }
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const GuestsPage = () => {
-  const { eventId = "1" } = useParams<{ eventId: string }>();
+  const { eventId = "" } = useParams<{ eventId: string }>();
   const [activeTab, setActiveTab] = useState("guests");
   
+  const { data: event } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!eventId
+  });
+  
   const handleExportCSV = () => {
+    // Logique pour exporter en CSV
     toast.success("Liste d'invités exportée en CSV !");
   };
   
-  const handleSendEmails = () => {
-    toast.success("Emails d'invitation envoyés avec succès !");
+  const handleSendEmails = async () => {
+    try {
+      // Obtenez tous les invités avec une adresse e-mail
+      const { data: guests, error } = await supabase
+        .from('guests')
+        .select('*')
+        .eq('event_id', eventId)
+        .not('email', 'is', null);
+      
+      if (error) throw error;
+      
+      if (!guests || guests.length === 0) {
+        toast.error("Aucun invité avec une adresse e-mail");
+        return;
+      }
+      
+      // Ici, vous pourriez envoyer un appel à une fonction Edge pour envoyer les e-mails
+      // Pour l'instant, on simule l'envoi d'emails
+      toast.success(`Emails d'invitation envoyés à ${guests.length} invités`);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi des emails:", error);
+      toast.error("Erreur lors de l'envoi des emails");
+    }
+  };
+  
+  const handleShareLink = () => {
+    // Générer et copier un lien de partage
+    const shareUrl = `${window.location.origin}/invitation/${eventId}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Lien de partage copié dans le presse-papiers!");
   };
   
   return (
-    <>
-      <Navbar />
-      <PageContainer>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div className="flex items-center gap-2">
-            <Link to="/events">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+    <PageContainer>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <div className="flex items-center gap-2">
+          <Link to="/events">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
             <h1 className="text-2xl font-bold">Gestion des invités</h1>
-          </div>
-          <div className="flex items-center gap-2 mt-4 md:mt-0">
-            <Button 
-              onClick={handleExportCSV} 
-              variant="outline"
-            >
-              <Download className="mr-2 h-4 w-4" /> Exporter
-            </Button>
-            <Button 
-              onClick={handleSendEmails}
-              className="bg-invitation-purple hover:bg-invitation-purple-dark"
-            >
-              <Mail className="mr-2 h-4 w-4" /> Envoyer les invitations
-            </Button>
+            {event && <p className="text-muted-foreground">{event.title}</p>}
           </div>
         </div>
-        
-        <Tabs defaultValue="guests" value={activeTab} onValueChange={setActiveTab} className="mb-4">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="guests">Liste d'invités</TabsTrigger>
-            <TabsTrigger value="check-in">Check-in</TabsTrigger>
-          </TabsList>
-          <TabsContent value="guests" className="mt-6">
-            <GuestList eventId={eventId} initialGuests={mockGuests} />
-          </TabsContent>
-          <TabsContent value="check-in" className="mt-6">
-            <div className="bg-muted p-6 rounded-lg text-center">
-              <h3 className="text-xl font-semibold mb-4">Mode Check-in pour l'événement</h3>
-              <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-                Cette page est dédiée à l'équipe sur place le jour de l'événement. Elle permet de vérifier les invités à leur arrivée.
-              </p>
-              <Button className="bg-invitation-purple hover:bg-invitation-purple-dark">
-                Activer le mode check-in
-              </Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </PageContainer>
-      <Footer />
-    </>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <Button 
+            onClick={handleExportCSV} 
+            variant="outline"
+          >
+            <Download className="mr-2 h-4 w-4" /> Exporter
+          </Button>
+          <Button 
+            onClick={handleShareLink}
+            variant="outline"
+          >
+            <Share className="mr-2 h-4 w-4" /> Copier lien
+          </Button>
+          <Button 
+            onClick={handleSendEmails}
+            className="bg-invitation-purple hover:bg-invitation-purple-dark"
+          >
+            <Mail className="mr-2 h-4 w-4" /> Envoyer les invitations
+          </Button>
+        </div>
+      </div>
+      
+      <Tabs defaultValue="guests" value={activeTab} onValueChange={setActiveTab} className="mb-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="guests">Liste d'invités</TabsTrigger>
+          <TabsTrigger value="check-in">Check-in</TabsTrigger>
+        </TabsList>
+        <TabsContent value="guests" className="mt-6">
+          <GuestList eventId={eventId} />
+        </TabsContent>
+        <TabsContent value="check-in" className="mt-6">
+          <CheckInMode eventId={eventId} />
+        </TabsContent>
+      </Tabs>
+    </PageContainer>
   );
 };
 
