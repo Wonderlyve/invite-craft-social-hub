@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Star, Path, Group, Transformer } from "react-konva";
+import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Star, Path, Group, Line } from "react-konva";
 import { useEditor } from "./EditorContext";
 import Konva from "konva";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     objects, 
     setObjects, 
     zoomScale,
+    setZoomScale,
     fontFamily,
     gradientColor
   } = useEditor();
@@ -303,13 +304,16 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
             onTransform={(e) => {
               const node = e.target;
               const scaleX = node.scaleX();
-              handleObjectChange(obj.id, {
-                x: node.x(),
-                y: node.y(),
-                radius: node.radius() * scaleX,
-                scaleX: 1,
-                scaleY: 1,
-              });
+              // Correction: utiliser les méthodes appropriées pour Circle
+              if (node instanceof Konva.Circle) {
+                handleObjectChange(obj.id, {
+                  x: node.x(),
+                  y: node.y(),
+                  radius: node.radius() * scaleX,
+                  scaleX: 1,
+                  scaleY: 1,
+                });
+              }
             }}
           />
         );
@@ -420,7 +424,7 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
               });
             }}
           >
-            <Konva.Line
+            <Line
               points={obj.points}
               fill={obj.fill}
               closed={true}

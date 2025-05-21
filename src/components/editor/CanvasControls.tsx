@@ -1,7 +1,7 @@
 
 import { useEditor } from "./EditorContext";
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Save, Trash2, Move } from "lucide-react";
+import { ZoomIn, ZoomOut, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface CanvasControlsProps {
@@ -13,13 +13,13 @@ export default function CanvasControls({ onSave }: CanvasControlsProps) {
 
   const handleZoomIn = () => {
     if (zoomScale < 3) {
-      setZoomScale(prev => Math.min(prev + 0.1, 3));
+      setZoomScale(Math.min(zoomScale + 0.1, 3));
     }
   };
 
   const handleZoomOut = () => {
     if (zoomScale > 0.5) {
-      setZoomScale(prev => Math.max(prev - 0.1, 0.5));
+      setZoomScale(Math.max(zoomScale - 0.1, 0.5));
     }
   };
 

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import PageContainer from "@/components/layout/PageContainer";
-import { Save, ArrowLeft, Eye, Share, Loader2, Move } from "lucide-react";
+import { Save, ArrowLeft, Eye, Share, Loader2, Image } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import KonvaCanvas from "@/components/editor/KonvaCanvas";
@@ -32,6 +32,11 @@ const EditorPage = () => {
   const [template, setTemplate] = useState<any>(null);
   const [canvasData, setCanvasData] = useState<any>(null);
   const [invitationId, setInvitationId] = useState<string | null>(null);
+  
+  // Réinitialiser le scroll à chaque changement de page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   // Charger les données du template ou de l'invitation existante
   useEffect(() => {
@@ -297,7 +302,7 @@ const EditorPage = () => {
                   <h3 className="font-semibold mb-3">Outils</h3>
                   <div className="space-y-4">
                     <Button onClick={addText} variant="outline" className="w-full justify-start">
-                      <type className="mr-2 h-4 w-4" /> Ajouter du texte
+                      Ajouter du texte
                     </Button>
                     
                     <Button variant="outline" asChild className="w-full justify-start">

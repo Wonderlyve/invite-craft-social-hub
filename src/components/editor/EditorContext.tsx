@@ -1,29 +1,26 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction } from "react";
+
+interface GradientColor {
+  start: string;
+  end: string;
+  type: 'linear' | 'radial';
+  angle: number;
+}
 
 interface EditorContextType {
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
   objects: any[];
-  setObjects: (objects: any[]) => void;
+  setObjects: Dispatch<SetStateAction<any[]>>;
   layers: any[];
-  setLayers: (layers: any[]) => void;
+  setLayers: Dispatch<SetStateAction<any[]>>;
   zoomScale: number;
-  setZoomScale: (scale: number) => void;
+  setZoomScale: Dispatch<SetStateAction<number>>;
   fontFamily: string;
-  setFontFamily: (font: string) => void;
-  gradientColor: {
-    start: string;
-    end: string;
-    type: 'linear' | 'radial';
-    angle: number;
-  };
-  setGradientColor: (gradient: {
-    start: string;
-    end: string;
-    type: 'linear' | 'radial';
-    angle: number;
-  }) => void;
+  setFontFamily: Dispatch<SetStateAction<string>>;
+  gradientColor: GradientColor;
+  setGradientColor: Dispatch<SetStateAction<GradientColor>>;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -34,10 +31,10 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [layers, setLayers] = useState<any[]>([]);
   const [zoomScale, setZoomScale] = useState(1);
   const [fontFamily, setFontFamily] = useState("Arial");
-  const [gradientColor, setGradientColor] = useState({
+  const [gradientColor, setGradientColor] = useState<GradientColor>({
     start: "#ffffff",
     end: "#000000",
-    type: "linear" as const,
+    type: "linear",
     angle: 0
   });
 
