@@ -1,211 +1,144 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, Search, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Guest, convertToGuests } from "@/types/guest";
+import { supabase } from "@/integrations/supabase/client";
+import { Check, X } from "lucide-react";
+import { convertToGuest, Guest } from "@/types/guest";
 
 interface CheckInModeProps {
-  eventId: string;
+  guest: Guest;
+  onClose: () => void;
+  onGuestUpdate: (guest: Guest) => void;
 }
 
-const CheckInMode = ({ eventId }: CheckInModeProps) => {
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [filteredGuests, setFilteredGuests] = useState<Guest[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
-  const [activeMode, setActiveMode] = useState(false);
+const CheckInMode = ({ guest, onClose, onGuestUpdate }: CheckInModeProps) => {
+  const [checkedIn, setCheckedIn] = useState(guest.checked_in);
+  const [guestData, setGuestData] = useState<Guest>(guest);
+  const [loading, setLoading] = useState(false);
   
   useEffect(() => {
-    if (activeMode) {
-      fetchGuests();
-    }
-  }, [activeMode, eventId]);
-  
-  useEffect(() => {
-    if (searchTerm.length > 0) {
-      setFilteredGuests(
-        guests.filter(guest => 
-          guest.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (guest.email && guest.email.toLowerCase().includes(searchTerm.toLowerCase()))
-        )
-      );
-    } else {
-      setFilteredGuests(guests);
-    }
-  }, [searchTerm, guests]);
-  
-  const fetchGuests = async () => {
-    setIsLoading(true);
+    setGuestData(guest);
+    setCheckedIn(guest.checked_in);
+  }, [guest]);
+
+  const handleCheckInToggle = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('guests')
-        .select('*')
-        .eq('event_id', eventId)
-        .order('full_name', { ascending: true });
+        .update({ checked_in: !checkedIn })
+        .eq('id', guest.id)
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
-      // Utiliser la fonction de conversion pour garantir le bon type
-      const typedGuests = convertToGuests(data || []);
-      setGuests(typedGuests);
-      setFilteredGuests(typedGuests);
-    } catch (error) {
-      console.error("Erreur lors du chargement des invités:", error);
-      toast.error("Erreur lors du chargement des invités");
+      const updatedGuest = convertToGuest(data);
+      setGuestData(updatedGuest);
+      setCheckedIn(updatedGuest.checked_in);
+      onGuestUpdate(updatedGuest);
+      
+      toast.success(`Guest ${updatedGuest.full_name} ${updatedGuest.checked_in ? 'checked in' : 'checked out'} successfully!`);
+    } catch (error: any) {
+      console.error("Error updating guest:", error);
+      toast.error(`Failed to update guest: ${error.message}`);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
-  const handleCheckIn = async (guestId: string, currentStatus: boolean) => {
-    setIsChecking(true);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setGuestData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
+  
+  const handleUpdateGuest = async () => {
+    setLoading(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('guests')
-        .update({ checked_in: !currentStatus })
-        .eq('id', guestId);
+        .update({
+          full_name: guestData.full_name,
+          email: guestData.email
+        })
+        .eq('id', guest.id)
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
-      // Mettre à jour l'état local
-      setGuests(guests.map(g => g.id === guestId ? { ...g, checked_in: !currentStatus } : g));
+      const updatedGuest = convertToGuest(data);
+      setGuestData(updatedGuest);
+      onGuestUpdate(updatedGuest);
       
-      toast.success(`Invité ${!currentStatus ? 'enregistré' : 'désenregistré'}`);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement:", error);
-      toast.error("Erreur lors de l'enregistrement");
+      toast.success(`Guest ${updatedGuest.full_name} updated successfully!`);
+    } catch (error: any) {
+      console.error("Error updating guest:", error);
+      toast.error(`Failed to update guest: ${error.message}`);
     } finally {
-      setIsChecking(false);
+      setLoading(false);
     }
   };
-  
-  if (!activeMode) {
-    return (
-      <div className="bg-muted p-6 rounded-lg text-center">
-        <h3 className="text-xl font-semibold mb-4">Mode Check-in pour l'événement</h3>
-        <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-          Cette page est dédiée à l'équipe sur place le jour de l'événement. Elle permet de vérifier les invités à leur arrivée.
-        </p>
-        <Button 
-          className="bg-invitation-purple hover:bg-invitation-purple-dark"
-          onClick={() => setActiveMode(true)}
-        >
-          Activer le mode check-in
-        </Button>
-      </div>
-    );
-  }
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center my-12">
-        <Loader2 className="h-8 w-8 animate-spin text-invitation-purple" />
-        <span className="ml-2">Chargement des invités...</span>
-      </div>
-    );
-  }
-  
+
   return (
-    <div className="space-y-6">
-      {!activeMode ? (
-        <div className="bg-muted p-6 rounded-lg text-center">
-          <h3 className="text-xl font-semibold mb-4">Mode Check-in pour l'événement</h3>
-          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-            Cette page est dédiée à l'équipe sur place le jour de l'événement. Elle permet de vérifier les invités à leur arrivée.
-          </p>
-          <Button 
-            className="bg-invitation-purple hover:bg-invitation-purple-dark"
-            onClick={() => setActiveMode(true)}
-          >
-            Activer le mode check-in
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>Check-In Mode</CardTitle>
+        <CardDescription>Manage guest check-in status and details.</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input 
+            type="text" 
+            id="name" 
+            name="full_name"
+            defaultValue={guestData.full_name} 
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input 
+            type="email" 
+            id="email" 
+            name="email"
+            defaultValue={guestData.email || ""} 
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="check-in">Checked In</Label>
+          <Switch 
+            id="check-in" 
+            checked={checkedIn} 
+            onCheckedChange={handleCheckInToggle}
+            disabled={loading}
+          />
+        </div>
+        <div className="flex justify-between">
+          <Button variant="ghost" onClick={onClose}>
+            <X className="w-4 h-4 mr-2" />
+            Cancel
+          </Button>
+          <Button onClick={handleUpdateGuest} disabled={loading}>
+            <Check className="w-4 h-4 mr-2" />
+            Update Guest
           </Button>
         </div>
-      ) : isLoading ? (
-        <div className="flex justify-center my-12">
-          <Loader2 className="h-8 w-8 animate-spin text-invitation-purple" />
-          <span className="ml-2">Chargement des invités...</span>
-        </div>
-      ) : (
-        <>
-          <div className="bg-invitation-purple text-white p-4 rounded-lg flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg">Mode Check-in actif</h3>
-              <p className="text-sm text-white/80">
-                {guests.filter(g => g.checked_in).length} / {guests.length} invités présents
-              </p>
-            </div>
-            <Button variant="secondary" onClick={() => setActiveMode(false)}>
-              Désactiver
-            </Button>
-          </div>
-          
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Rechercher un invité..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Invité</TableHead>
-                  <TableHead>Table</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Check-in</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredGuests.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
-                      Aucun invité trouvé.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredGuests.map((guest) => (
-                    <TableRow key={guest.id} className={guest.checked_in ? 'bg-green-50' : ''}>
-                      <TableCell className="font-medium">{guest.full_name}</TableCell>
-                      <TableCell>{guest.table_name || '-'}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          guest.status === 'confirmed' ? 'text-green-600 bg-green-100' :
-                          guest.status === 'declined' ? 'text-red-600 bg-red-100' :
-                          'text-yellow-600 bg-yellow-100'
-                        }`}>
-                          {guest.status === 'confirmed' ? 'Confirmé' : 
-                           guest.status === 'declined' ? 'Refusé' : 
-                           'En attente'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant={guest.checked_in ? "outline" : "default"}
-                          onClick={() => handleCheckIn(guest.id, guest.checked_in)}
-                          disabled={isChecking}
-                          className={guest.checked_in ? "border-green-500 text-green-500" : "bg-invitation-purple hover:bg-invitation-purple-dark"}
-                        >
-                          <Check className="mr-2 h-4 w-4" />
-                          {guest.checked_in ? "Présent" : "Enregistrer"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

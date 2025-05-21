@@ -16,10 +16,10 @@ export const convertToGuest = (rawData: any): Guest => {
   return {
     ...rawData,
     // Garantir que le status est l'un des types autorisés
-    status: rawData.status === 'pending' || 
+    status: (rawData.status === 'pending' || 
             rawData.status === 'confirmed' || 
-            rawData.status === 'declined' 
-              ? rawData.status 
+            rawData.status === 'declined')
+              ? rawData.status as 'pending' | 'confirmed' | 'declined'
               : 'pending'
   };
 };

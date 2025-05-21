@@ -1,25 +1,21 @@
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
 import PageContainer from "@/components/layout/PageContainer";
-import { Save, ArrowLeft, Eye, Share, Loader2, Image } from "lucide-react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import KonvaCanvas from "@/components/editor/KonvaCanvas";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditorProvider } from "@/components/editor/EditorContext";
-import LayersPanel from "@/components/editor/LayersPanel";
-import FontSelector from "@/components/editor/FontSelector";
-import GradientPicker from "@/components/editor/GradientPicker";
-import ShapesPanel from "@/components/editor/ShapesPanel";
-import CanvasControls from "@/components/editor/CanvasControls";
-import DecorationItems from "@/components/editor/DecorationItems";
-import MobileToolbar from "@/components/editor/MobileToolbar";
+import Header from "@/components/editor/EditorPage/Header";
+import EditorTab from "@/components/editor/EditorPage/EditorTab";
+import PreviewTab from "@/components/editor/EditorPage/PreviewTab";
+import useScrollToTop from "@/hooks/useScrollToTop";
 
 const EditorPage = () => {
+  useScrollToTop();
+  
   const [activeTab, setActiveTab] = useState("editor");
   const [searchParams] = useSearchParams();
   const templateId = searchParams.get("template");
@@ -32,11 +28,6 @@ const EditorPage = () => {
   const [template, setTemplate] = useState<any>(null);
   const [canvasData, setCanvasData] = useState<any>(null);
   const [invitationId, setInvitationId] = useState<string | null>(null);
-  
-  // Réinitialiser le scroll à chaque changement de page
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
   
   // Charger les données du template ou de l'invitation existante
   useEffect(() => {
@@ -90,7 +81,7 @@ const EditorPage = () => {
     loadData();
   }, [templateId, eventId]);
   
-  const handleSave = async (canvasData: any) => {
+  const handleSave = async () => {
     if (!user) {
       toast.error("Vous devez être connecté pour sauvegarder");
       return;
@@ -234,37 +225,13 @@ const EditorPage = () => {
   return (
     <EditorProvider>
       <PageContainer className="max-w-6xl px-0 sm:px-4">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 md:mb-6 px-4 sm:px-0">
-          <div className="flex items-center gap-2">
-            <Link to="/events">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-xl md:text-2xl font-bold">Éditeur d'invitation</h1>
-          </div>
-          <div className="flex items-center gap-2 mt-2 md:mt-0">
-            <Button 
-              onClick={() => {
-                if (canvasData) handleSave(canvasData);
-              }} 
-              variant="outline"
-              disabled={isSaving}
-              size="sm"
-              className="md:text-base"
-            >
-              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Sauvegarder
-            </Button>
-            <Button 
-              className="bg-invitation-purple hover:bg-invitation-purple-dark md:text-base"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share className="mr-2 h-4 w-4" /> Partager
-            </Button>
-          </div>
-        </div>
+        <Header 
+          isSaving={isSaving} 
+          handleSave={() => {
+            if (canvasData) handleSave();
+          }} 
+          handleShare={handleShare}
+        />
         
         <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="mb-4 px-4 sm:px-0">
           <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -272,112 +239,22 @@ const EditorPage = () => {
             <TabsTrigger value="preview">Aperçu</TabsTrigger>
           </TabsList>
           <TabsContent value="editor" className="mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              {/* Zone d'édition principale */}
-              <Card className="lg:col-span-3 p-2 sm:p-4">
-                {canvasData && (
-                  <>
-                    <div className="mb-3">
-                      <CanvasControls
-                        onSave={() => {
-                          handleSave(canvasData);
-                        }} 
-                      />
-                    </div>
-                    <div className="flex justify-center">
-                      <KonvaCanvas 
-                        width={600} 
-                        height={800} 
-                        initialData={canvasData}
-                        onSave={setCanvasData}
-                      />
-                    </div>
-                  </>
-                )}
-              </Card>
-              
-              {/* Panneau latéral des outils - visible seulement sur desktop */}
-              <div className="space-y-4 hidden lg:block">
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Outils</h3>
-                  <div className="space-y-4">
-                    <Button onClick={addText} variant="outline" className="w-full justify-start">
-                      Ajouter du texte
-                    </Button>
-                    
-                    <Button variant="outline" asChild className="w-full justify-start">
-                      <label className="cursor-pointer flex items-center">
-                        <Image className="mr-2 h-4 w-4" />
-                        Importer une image
-                        <input type="file" className="hidden" accept="image/*" onChange={uploadImage} />
-                      </label>
-                    </Button>
-                    
-                    <FontSelector />
-                  </div>
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Formes</h3>
-                  <ShapesPanel />
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Couleurs et dégradés</h3>
-                  <GradientPicker />
-                </Card>
-                
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-3">Calques</h3>
-                  <LayersPanel />
-                </Card>
-                
-                <DecorationItems />
-              </div>
-            </div>
-            
-            {/* Toolbar pour mobile */}
-            <MobileToolbar onTextAdd={addText} onImageUpload={uploadImage} />
+            <EditorTab
+              canvasData={canvasData}
+              onSaveCanvas={setCanvasData}
+              onTextAdd={addText}
+              onImageUpload={uploadImage}
+              handleSave={() => {
+                if (canvasData) handleSave();
+              }}
+            />
           </TabsContent>
           <TabsContent value="preview" className="mt-4 px-2 sm:px-0">
-            <div className="flex flex-col items-center">
-              <div className="mb-4 md:mb-6 text-center max-w-md">
-                <h3 className="text-xl font-semibold mb-2">Aperçu de l'invitation</h3>
-                <p className="text-muted-foreground text-sm">
-                  Voici comment votre invitation sera présentée à vos invités.
-                </p>
-              </div>
-              <div className="border border-border rounded-md p-4 md:p-8 bg-white shadow-md max-w-full overflow-x-auto">
-                {canvasData ? (
-                  <div className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] transform scale-[0.5] md:scale-100 origin-top-left md:origin-center">
-                    <KonvaCanvas 
-                      width={600} 
-                      height={800} 
-                      initialData={canvasData}
-                      onSave={setCanvasData}
-                    />
-                  </div>
-                ) : (
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="Aperçu de l'invitation" 
-                    className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] object-contain"
-                  />
-                )}
-              </div>
-              <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3">
-                <Button variant="outline" size="sm" className="sm:text-base">
-                  <Eye className="mr-2 h-4 w-4" /> Prévisualiser par invité
-                </Button>
-                <Button 
-                  className="bg-invitation-purple hover:bg-invitation-purple-dark sm:text-base" 
-                  size="sm"
-                  onClick={handleShare}
-                >
-                  <Share className="mr-2 h-4 w-4" /> Partager les invitations
-                </Button>
-              </div>
-            </div>
+            <PreviewTab
+              canvasData={canvasData}
+              onSaveCanvas={setCanvasData}
+              handleShare={handleShare}
+            />
           </TabsContent>
         </Tabs>
       </PageContainer>
