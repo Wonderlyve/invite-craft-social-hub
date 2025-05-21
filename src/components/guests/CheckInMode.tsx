@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -10,12 +11,13 @@ import { Check, X } from "lucide-react";
 import { convertToGuest, Guest } from "@/types/guest";
 
 interface CheckInModeProps {
+  eventId: string;
   guest: Guest;
   onClose: () => void;
   onGuestUpdate: (guest: Guest) => void;
 }
 
-const CheckInMode = ({ guest, onClose, onGuestUpdate }: CheckInModeProps) => {
+const CheckInMode = ({ eventId, guest, onClose, onGuestUpdate }: CheckInModeProps) => {
   const [checkedIn, setCheckedIn] = useState(guest.checked_in);
   const [guestData, setGuestData] = useState<Guest>(guest);
   const [loading, setLoading] = useState(false);

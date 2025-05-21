@@ -5,7 +5,7 @@ import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { useScrollToTop } from "./hooks/useScrollToTop";
+import useScrollToTop from "./hooks/useScrollToTop"; // Fixed import
 
 // Pages
 import Index from "@/pages/Index";
