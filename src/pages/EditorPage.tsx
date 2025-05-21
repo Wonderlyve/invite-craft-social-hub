@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import PageContainer from "@/components/layout/PageContainer";
-import { Save, ArrowLeft, Eye, Share, Loader2 } from "lucide-react";
+import { Save, ArrowLeft, Eye, Share, Loader2, Move } from "lucide-react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import KonvaCanvas from "@/components/editor/KonvaCanvas";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { EditorProvider } from "@/components/editor/EditorContext";
+import LayersPanel from "@/components/editor/LayersPanel";
+import FontSelector from "@/components/editor/FontSelector";
+import GradientPicker from "@/components/editor/GradientPicker";
+import ShapesPanel from "@/components/editor/ShapesPanel";
+import CanvasControls from "@/components/editor/CanvasControls";
+import DecorationItems from "@/components/editor/DecorationItems";
+import MobileToolbar from "@/components/editor/MobileToolbar";
 
 const EditorPage = () => {
   const [activeTab, setActiveTab] = useState("editor");
@@ -106,15 +114,21 @@ const EditorPage = () => {
         toast.success("Invitation mise à jour avec succès");
       } else {
         // Créer une nouvelle invitation
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('invitations')
           .insert({ 
             event_id: eventId,
             template_id: templateId,
             canvas_data: canvasData
-          });
+          })
+          .select();
         
         if (error) throw error;
+        
+        if (data && data[0]) {
+          setInvitationId(data[0].id);
+        }
+        
         toast.success("Invitation sauvegardée avec succès");
       }
     } catch (error) {
@@ -135,6 +149,72 @@ const EditorPage = () => {
     navigator.clipboard.writeText(`${window.location.origin}/invitation/${eventId}`);
   };
   
+  const addText = () => {
+    if (!canvasData) return;
+    
+    const updatedData = {
+      ...canvasData,
+      objects: [
+        ...(canvasData.objects || []),
+        {
+          id: `text-${Date.now()}`,
+          type: 'text',
+          x: 100,
+          y: 100,
+          text: 'Votre texte ici',
+          fontSize: 20,
+          fontFamily: 'Arial',
+          fill: '#333333',
+          draggable: true,
+          width: 200,
+        }
+      ]
+    };
+    
+    setCanvasData(updatedData);
+  };
+  
+  const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !canvasData) return;
+    
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      if (!event.target?.result) return;
+      
+      const img = new window.Image();
+      img.src = event.target.result.toString();
+      
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        const newWidth = 200;
+        const newHeight = newWidth / aspectRatio;
+        
+        const updatedData = {
+          ...canvasData,
+          objects: [
+            ...(canvasData.objects || []),
+            {
+              id: `image-${Date.now()}`,
+              type: 'image',
+              x: 100,
+              y: 100,
+              width: newWidth,
+              height: newHeight,
+              src: event.target?.result.toString(),
+              draggable: true,
+            }
+          ]
+        };
+        
+        setCanvasData(updatedData);
+      };
+    };
+    
+    reader.readAsDataURL(file);
+  };
+  
   if (isLoading) {
     return (
       <PageContainer className="max-w-6xl">
@@ -147,145 +227,156 @@ const EditorPage = () => {
   }
   
   return (
-    <PageContainer className="max-w-6xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div className="flex items-center gap-2">
-          <Link to="/events">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <ArrowLeft className="h-5 w-5" />
+    <EditorProvider>
+      <PageContainer className="max-w-6xl px-0 sm:px-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 md:mb-6 px-4 sm:px-0">
+          <div className="flex items-center gap-2">
+            <Link to="/events">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl md:text-2xl font-bold">Éditeur d'invitation</h1>
+          </div>
+          <div className="flex items-center gap-2 mt-2 md:mt-0">
+            <Button 
+              onClick={() => {
+                if (canvasData) handleSave(canvasData);
+              }} 
+              variant="outline"
+              disabled={isSaving}
+              size="sm"
+              className="md:text-base"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Sauvegarder
             </Button>
-          </Link>
-          <h1 className="text-2xl font-bold">Éditeur d'invitation</h1>
-        </div>
-        <div className="flex items-center gap-2 mt-4 md:mt-0">
-          <Button 
-            onClick={() => {
-              if (canvasData) handleSave(canvasData);
-            }} 
-            variant="outline"
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Sauvegarder
-          </Button>
-          <Button 
-            className="bg-invitation-purple hover:bg-invitation-purple-dark"
-            onClick={handleShare}
-          >
-            <Share className="mr-2 h-4 w-4" /> Partager
-          </Button>
-        </div>
-      </div>
-      
-      <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="editor">Éditeur</TabsTrigger>
-          <TabsTrigger value="preview">Aperçu</TabsTrigger>
-        </TabsList>
-        <TabsContent value="editor" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <Card className="lg:col-span-3 p-6">
-              {template && (
-                <KonvaCanvas 
-                  width={600} 
-                  height={800} 
-                  initialData={canvasData}
-                  onSave={setCanvasData}
-                />
-              )}
-            </Card>
-            <div className="space-y-4">
-              <Card className="p-4">
-                <h3 className="font-semibold mb-3">Paramètres de l'invitation</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium">Type d'événement</label>
-                    <p className="mt-1 px-3 py-2 border rounded-md bg-muted/30">
-                      {template?.category || "Non défini"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Format</label>
-                    <p className="mt-1 px-3 py-2 border rounded-md bg-muted/30">
-                      Portrait (600x800)
-                    </p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-4">
-                <h3 className="font-semibold mb-3">Champs dynamiques</h3>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    const textValue = "{nom}";
-                    navigator.clipboard.writeText(textValue);
-                    toast.info("Copié : " + textValue);
-                  }}>
-                    {"{nom}"}
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    const textValue = "{table}";
-                    navigator.clipboard.writeText(textValue);
-                    toast.info("Copié : " + textValue);
-                  }}>
-                    {"{table}"}
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    const textValue = "{date}";
-                    navigator.clipboard.writeText(textValue);
-                    toast.info("Copié : " + textValue);
-                  }}>
-                    {"{date}"}
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    const textValue = "{lieu}";
-                    navigator.clipboard.writeText(textValue);
-                    toast.info("Copié : " + textValue);
-                  }}>
-                    {"{lieu}"}
-                  </Button>
-                </div>
-              </Card>
-            </div>
+            <Button 
+              className="bg-invitation-purple hover:bg-invitation-purple-dark md:text-base"
+              size="sm"
+              onClick={handleShare}
+            >
+              <Share className="mr-2 h-4 w-4" /> Partager
+            </Button>
           </div>
-        </TabsContent>
-        <TabsContent value="preview" className="mt-6">
-          <div className="flex flex-col items-center">
-            <div className="mb-6 text-center max-w-md">
-              <h3 className="text-xl font-semibold mb-2">Aperçu de l'invitation</h3>
-              <p className="text-muted-foreground">
-                Voici comment votre invitation sera présentée à vos invités.
-              </p>
+        </div>
+        
+        <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="mb-4 px-4 sm:px-0">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="editor">Éditeur</TabsTrigger>
+            <TabsTrigger value="preview">Aperçu</TabsTrigger>
+          </TabsList>
+          <TabsContent value="editor" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Zone d'édition principale */}
+              <Card className="lg:col-span-3 p-2 sm:p-4">
+                {canvasData && (
+                  <>
+                    <div className="mb-3">
+                      <CanvasControls
+                        onSave={() => {
+                          handleSave(canvasData);
+                        }} 
+                      />
+                    </div>
+                    <div className="flex justify-center">
+                      <KonvaCanvas 
+                        width={600} 
+                        height={800} 
+                        initialData={canvasData}
+                        onSave={setCanvasData}
+                      />
+                    </div>
+                  </>
+                )}
+              </Card>
+              
+              {/* Panneau latéral des outils - visible seulement sur desktop */}
+              <div className="space-y-4 hidden lg:block">
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3">Outils</h3>
+                  <div className="space-y-4">
+                    <Button onClick={addText} variant="outline" className="w-full justify-start">
+                      <type className="mr-2 h-4 w-4" /> Ajouter du texte
+                    </Button>
+                    
+                    <Button variant="outline" asChild className="w-full justify-start">
+                      <label className="cursor-pointer flex items-center">
+                        <Image className="mr-2 h-4 w-4" />
+                        Importer une image
+                        <input type="file" className="hidden" accept="image/*" onChange={uploadImage} />
+                      </label>
+                    </Button>
+                    
+                    <FontSelector />
+                  </div>
+                </Card>
+                
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3">Formes</h3>
+                  <ShapesPanel />
+                </Card>
+                
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3">Couleurs et dégradés</h3>
+                  <GradientPicker />
+                </Card>
+                
+                <Card className="p-4">
+                  <h3 className="font-semibold mb-3">Calques</h3>
+                  <LayersPanel />
+                </Card>
+                
+                <DecorationItems />
+              </div>
             </div>
-            <div className="border border-border rounded-md p-8 bg-white shadow-md">
-              {canvasData ? (
-                <div className="w-[600px] h-[800px]">
-                  <KonvaCanvas 
-                    width={600} 
-                    height={800} 
-                    initialData={canvasData}
-                    onSave={setCanvasData}
+            
+            {/* Toolbar pour mobile */}
+            <MobileToolbar onTextAdd={addText} onImageUpload={uploadImage} />
+          </TabsContent>
+          <TabsContent value="preview" className="mt-4 px-2 sm:px-0">
+            <div className="flex flex-col items-center">
+              <div className="mb-4 md:mb-6 text-center max-w-md">
+                <h3 className="text-xl font-semibold mb-2">Aperçu de l'invitation</h3>
+                <p className="text-muted-foreground text-sm">
+                  Voici comment votre invitation sera présentée à vos invités.
+                </p>
+              </div>
+              <div className="border border-border rounded-md p-4 md:p-8 bg-white shadow-md max-w-full overflow-x-auto">
+                {canvasData ? (
+                  <div className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] transform scale-[0.5] md:scale-100 origin-top-left md:origin-center">
+                    <KonvaCanvas 
+                      width={600} 
+                      height={800} 
+                      initialData={canvasData}
+                      onSave={setCanvasData}
+                    />
+                  </div>
+                ) : (
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Aperçu de l'invitation" 
+                    className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] object-contain"
                   />
-                </div>
-              ) : (
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Aperçu de l'invitation" 
-                  className="w-[600px] h-[800px] object-contain"
-                />
-              )}
+                )}
+              </div>
+              <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3">
+                <Button variant="outline" size="sm" className="sm:text-base">
+                  <Eye className="mr-2 h-4 w-4" /> Prévisualiser par invité
+                </Button>
+                <Button 
+                  className="bg-invitation-purple hover:bg-invitation-purple-dark sm:text-base" 
+                  size="sm"
+                  onClick={handleShare}
+                >
+                  <Share className="mr-2 h-4 w-4" /> Partager les invitations
+                </Button>
+              </div>
             </div>
-            <div className="mt-8 flex gap-4">
-              <Button variant="outline">
-                <Eye className="mr-2 h-4 w-4" /> Prévisualiser par invité
-              </Button>
-              <Button className="bg-invitation-purple hover:bg-invitation-purple-dark" onClick={handleShare}>
-                <Share className="mr-2 h-4 w-4" /> Partager les invitations
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </PageContainer>
+          </TabsContent>
+        </Tabs>
+      </PageContainer>
+    </EditorProvider>
   );
 };
 

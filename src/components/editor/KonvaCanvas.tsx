@@ -1,13 +1,9 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage } from "react-konva";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { ColorPicker, useColor } from "react-color-palette";
-import "react-color-palette/lib/css/styles.css";
+import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Star, Path, Group, Transformer } from "react-konva";
+import { useEditor } from "./EditorContext";
+import Konva from "konva";
 import { toast } from "sonner";
-import { Type, Square, Circle as CircleIcon, Image, Trash2, Move } from "lucide-react";
 
 interface KonvaCanvasProps {
   width: number;
@@ -17,101 +13,70 @@ interface KonvaCanvasProps {
 }
 
 const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) => {
-  const [activeTab, setActiveTab] = useState<'text' | 'shapes' | 'images'>('text');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [objects, setObjects] = useState<any[]>([]);
-  const [textValue, setTextValue] = useState<string>('Votre texte ici');
-  const [color, setColor] = useColor("hex", "#333333");
-  const [fontSize, setFontSize] = useState<number>(20);
-  const stageRef = useRef<any>(null);
+  const { 
+    selectedId, 
+    setSelectedId, 
+    objects, 
+    setObjects, 
+    zoomScale,
+    fontFamily,
+    gradientColor
+  } = useEditor();
+  
+  const stageRef = useRef<Konva.Stage>(null);
+  const layerRef = useRef<Konva.Layer>(null);
+  const transformerRef = useRef<Konva.Transformer>(null);
+  
+  const [canvasSize, setCanvasSize] = useState({ width, height });
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Gérer le pinch zoom
+  const lastCenter = useRef({ x: 0, y: 0 });
+  const lastDist = useRef(0);
 
   // Chargement des données initiales
   useEffect(() => {
     if (initialData && initialData.objects) {
       setObjects(initialData.objects);
     }
-  }, [initialData]);
+  }, [initialData, setObjects]);
 
-  // Fonctions de manipulation des objets
-  const addText = () => {
-    const id = `text-${Date.now()}`;
-    setObjects([...objects, {
-      id,
-      type: 'text',
-      x: 100,
-      y: 100,
-      text: textValue,
-      fontSize: fontSize,
-      fill: color.hex,
-      draggable: true,
-      width: 200,
-    }]);
-    setSelectedId(id);
-  };
+  // Adapter la taille du canvas au zoom
+  useEffect(() => {
+    setCanvasSize({
+      width: width * zoomScale,
+      height: height * zoomScale
+    });
+  }, [width, height, zoomScale]);
 
-  const addRectangle = () => {
-    const id = `rect-${Date.now()}`;
-    setObjects([...objects, {
-      id,
-      type: 'rect',
-      x: 100,
-      y: 100,
-      width: 100,
-      height: 100,
-      fill: color.hex,
-      draggable: true,
-    }]);
-    setSelectedId(id);
-  };
+  // Gérer le transformer pour l'élément sélectionné
+  useEffect(() => {
+    if (!transformerRef.current || !layerRef.current || selectedId === null) return;
 
-  const addCircle = () => {
-    const id = `circle-${Date.now()}`;
-    setObjects([...objects, {
-      id,
-      type: 'circle',
-      x: 100,
-      y: 100,
-      radius: 50,
-      fill: color.hex,
-      draggable: true,
-    }]);
-    setSelectedId(id);
-  };
+    const node = layerRef.current.findOne(`#${selectedId}`);
+    if (node) {
+      transformerRef.current.nodes([node]);
+      transformerRef.current.getLayer()?.batchDraw();
+    } else {
+      transformerRef.current.nodes([]);
+      transformerRef.current.getLayer()?.batchDraw();
+    }
+  }, [selectedId, objects]);
 
-  const uploadImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    
-    reader.onload = (event) => {
-      if (!event.target?.result) return;
-      
-      const img = new window.Image();
-      img.src = event.target.result.toString();
-      
-      img.onload = () => {
-        const id = `image-${Date.now()}`;
-        const aspectRatio = img.width / img.height;
-        const newWidth = 200;
-        const newHeight = newWidth / aspectRatio;
-        
-        setObjects([...objects, {
-          id,
-          type: 'image',
-          x: 100,
-          y: 100,
-          width: newWidth,
-          height: newHeight,
-          src: event.target?.result.toString(),
-          draggable: true,
-        }]);
-        setSelectedId(id);
-      };
+  // Gérer les touches du clavier pour supprimer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        setObjects(objects.filter(obj => obj.id !== selectedId));
+        setSelectedId(null);
+        toast.success("Élément supprimé");
+      }
     };
-    
-    reader.readAsDataURL(file);
-  };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, objects, setObjects, setSelectedId]);
 
   const handleObjectChange = (id: string, newProps: any) => {
     setObjects(
@@ -119,238 +84,391 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     );
   };
 
-  const deleteSelected = () => {
-    if (!selectedId) return;
-    setObjects(objects.filter(obj => obj.id !== selectedId));
-    setSelectedId(null);
-    toast.success("Élément supprimé");
+  const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    // Clic sur le stage lui-même et non sur un shape
+    if (e.target === e.target.getStage()) {
+      setSelectedId(null);
+      return;
+    }
+    
+    const clickedOnTransformer = e.target.getParent().className === 'Transformer';
+    if (clickedOnTransformer) return;
+    
+    const id = e.target.id();
+    if (id) {
+      setSelectedId(id);
+    }
   };
 
-  const saveCanvas = () => {
+  const handleTouchStart = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+    
+    if (touch1 && touch2) {
+      // Pinch/zoom avec deux doigts
+      const p1 = { x: touch1.clientX, y: touch1.clientY };
+      const p2 = { x: touch2.clientX, y: touch2.clientY };
+      
+      lastCenter.current = {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+      };
+      
+      lastDist.current = Math.sqrt(
+        Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+      );
+    } else if (e.target === e.target.getStage()) {
+      // Déplacement avec un doigt sur l'arrière-plan
+      setIsDragging(true);
+    }
+  };
+  
+  const handleTouchMove = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    e.evt.preventDefault();
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+    
+    if (touch1 && touch2) {
+      // Pinch/zoom
+      const p1 = { x: touch1.clientX, y: touch1.clientY };
+      const p2 = { x: touch2.clientX, y: touch2.clientY };
+      
+      const newCenter = {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+      };
+      
+      const dist = Math.sqrt(
+        Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)
+      );
+      
+      if (!lastDist.current) return;
+      
+      const pointTo = {
+        x: (newCenter.x - stageRef.current!.container().offsetLeft) / zoomScale,
+        y: (newCenter.y - stageRef.current!.container().offsetTop) / zoomScale,
+      };
+      
+      const scale = zoomScale * (dist / lastDist.current);
+      
+      setZoomScale(Math.min(Math.max(scale, 0.5), 3));
+      
+      lastDist.current = dist;
+      lastCenter.current = newCenter;
+    } else if (isDragging) {
+      // Déplacement du canvas
+      const stage = stageRef.current;
+      if (!stage) return;
+      
+      const dx = touch1.clientX - touch1.clientX;
+      const dy = touch1.clientY - touch1.clientY;
+      
+      setStagePos({
+        x: stagePos.x + dx,
+        y: stagePos.y + dy
+      });
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    lastDist.current = 0;
+    setIsDragging(false);
+  };
+
+  const handleExportClick = () => {
+    if (!stageRef.current) return;
+    
+    // Sauvegarder les données du canvas
     const canvasData = {
       objects,
       width,
       height,
     };
+    
     onSave(canvasData);
-    toast.success("Invitation sauvegardée");
   };
 
-  const checkDeselect = (e: any) => {
-    if (e.target === e.target.getStage()) {
-      setSelectedId(null);
+  const renderShape = (obj: any) => {
+    const isSelected = obj.id === selectedId;
+    
+    // Appliquer la police de caractères active pour les nouveaux textes
+    if (obj.type === 'text' && isSelected) {
+      obj.fontFamily = fontFamily;
+    }
+    
+    switch (obj.type) {
+      case 'text':
+        return (
+          <Text
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            text={obj.text}
+            fontSize={obj.fontSize}
+            fontFamily={obj.fontFamily || 'Arial'}
+            fill={obj.fill}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+            onTransform={(e) => {
+              const node = e.target;
+              handleObjectChange(obj.id, {
+                x: node.x(),
+                y: node.y(),
+                rotation: node.rotation(),
+                width: node.width() * node.scaleX(),
+                height: node.height() * node.scaleY(),
+                scaleX: 1,
+                scaleY: 1,
+              });
+            }}
+          />
+        );
+        
+      case 'rect':
+        return (
+          <Rect
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            width={obj.width}
+            height={obj.height}
+            fill={obj.fill}
+            fillLinearGradientStartPoint={obj.fillLinearGradientStartPoint}
+            fillLinearGradientEndPoint={obj.fillLinearGradientEndPoint}
+            fillLinearGradientColorStops={obj.fillLinearGradientColorStops}
+            fillRadialGradientStartPoint={obj.fillRadialGradientStartPoint}
+            fillRadialGradientStartRadius={obj.fillRadialGradientStartRadius}
+            fillRadialGradientEndPoint={obj.fillRadialGradientEndPoint}
+            fillRadialGradientEndRadius={obj.fillRadialGradientEndRadius}
+            fillRadialGradientColorStops={obj.fillRadialGradientColorStops}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+            onTransform={(e) => {
+              const node = e.target;
+              handleObjectChange(obj.id, {
+                x: node.x(),
+                y: node.y(),
+                rotation: node.rotation(),
+                width: node.width() * node.scaleX(),
+                height: node.height() * node.scaleY(),
+                scaleX: 1,
+                scaleY: 1,
+              });
+            }}
+          />
+        );
+        
+      case 'circle':
+        return (
+          <Circle
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            radius={obj.radius}
+            fill={obj.fill}
+            fillLinearGradientStartPoint={obj.fillLinearGradientStartPoint}
+            fillLinearGradientEndPoint={obj.fillLinearGradientEndPoint}
+            fillLinearGradientColorStops={obj.fillLinearGradientColorStops}
+            fillRadialGradientStartPoint={obj.fillRadialGradientStartPoint}
+            fillRadialGradientStartRadius={obj.fillRadialGradientStartRadius}
+            fillRadialGradientEndPoint={obj.fillRadialGradientEndPoint}
+            fillRadialGradientEndRadius={obj.fillRadialGradientEndRadius}
+            fillRadialGradientColorStops={obj.fillRadialGradientColorStops}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+            onTransform={(e) => {
+              const node = e.target;
+              const scaleX = node.scaleX();
+              handleObjectChange(obj.id, {
+                x: node.x(),
+                y: node.y(),
+                radius: node.radius() * scaleX,
+                scaleX: 1,
+                scaleY: 1,
+              });
+            }}
+          />
+        );
+        
+      case 'image':
+        return (
+          <KonvaImage
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            width={obj.width}
+            height={obj.height}
+            image={(() => {
+              const img = new window.Image();
+              img.src = obj.src;
+              return img;
+            })()}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+            onTransform={(e) => {
+              const node = e.target;
+              handleObjectChange(obj.id, {
+                x: node.x(),
+                y: node.y(),
+                rotation: node.rotation(),
+                width: node.width() * node.scaleX(),
+                height: node.height() * node.scaleY(),
+                scaleX: 1,
+                scaleY: 1,
+              });
+            }}
+          />
+        );
+        
+      case 'star':
+        return (
+          <Star
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            numPoints={obj.numPoints || 5}
+            innerRadius={obj.innerRadius || 20}
+            outerRadius={obj.outerRadius || 40}
+            fill={obj.fill}
+            fillLinearGradientStartPoint={obj.fillLinearGradientStartPoint}
+            fillLinearGradientEndPoint={obj.fillLinearGradientEndPoint}
+            fillLinearGradientColorStops={obj.fillLinearGradientColorStops}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+          />
+        );
+        
+      case 'path':
+        return (
+          <Path
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            data={obj.data}
+            fill={obj.fill}
+            scale={obj.scale}
+            fillLinearGradientStartPoint={obj.fillLinearGradientStartPoint}
+            fillLinearGradientEndPoint={obj.fillLinearGradientEndPoint}
+            fillLinearGradientColorStops={obj.fillLinearGradientColorStops}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+          />
+        );
+        
+      case 'polygon':
+        return (
+          <Group
+            key={obj.id}
+            id={obj.id}
+            x={obj.x}
+            y={obj.y}
+            draggable={true}
+            onClick={() => setSelectedId(obj.id)}
+            onTap={() => setSelectedId(obj.id)}
+            onDragEnd={(e) => {
+              handleObjectChange(obj.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+              });
+            }}
+          >
+            <Konva.Line
+              points={obj.points}
+              fill={obj.fill}
+              closed={true}
+              fillLinearGradientStartPoint={obj.fillLinearGradientStartPoint}
+              fillLinearGradientEndPoint={obj.fillLinearGradientEndPoint}
+              fillLinearGradientColorStops={obj.fillLinearGradientColorStops}
+            />
+          </Group>
+        );
+
+      default:
+        return null;
     }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Toolbox */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="mb-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="text" className="flex items-center gap-2">
-            <Type className="w-4 h-4" />
-            Texte
-          </TabsTrigger>
-          <TabsTrigger value="shapes" className="flex items-center gap-2">
-            <Square className="w-4 h-4" />
-            Formes
-          </TabsTrigger>
-          <TabsTrigger value="images" className="flex items-center gap-2">
-            <Image className="w-4 h-4" />
-            Images
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="text" className="space-y-4 p-4 border rounded-md mt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Texte</label>
-              <Input
-                placeholder="Votre texte ici"
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Taille</label>
-              <Input
-                type="number"
-                value={fontSize}
-                onChange={(e) => setFontSize(parseInt(e.target.value))}
-                min={10}
-                max={72}
-              />
-            </div>
-          </div>
-          <Button onClick={addText} className="w-full bg-invitation-purple hover:bg-invitation-purple-dark">
-            Ajouter du texte
-          </Button>
-        </TabsContent>
-        
-        <TabsContent value="shapes" className="space-y-4 p-4 border rounded-md mt-2">
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={addRectangle} variant="outline" size="sm" className="flex items-center gap-2">
-              <Square className="w-4 h-4" />
-              Rectangle
-            </Button>
-            <Button onClick={addCircle} variant="outline" size="sm" className="flex items-center gap-2">
-              <CircleIcon className="w-4 h-4" />
-              Cercle
-            </Button>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="images" className="space-y-4 p-4 border rounded-md mt-2">
-          <Button variant="outline" asChild className="w-full">
-            <label className="cursor-pointer flex items-center justify-center gap-2">
-              <Image className="w-4 h-4" />
-              Importer une image
-              <input type="file" className="hidden" accept="image/*" onChange={uploadImage} />
-            </label>
-          </Button>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Color Picker */}
-      <div className="mb-4 p-4 border rounded-md">
-        <label className="block text-sm font-medium mb-2">Couleur</label>
-        <ColorPicker width={456} height={100} color={color} onChange={setColor} hideHSV />
-      </div>
-      
-      {/* Actions */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {selectedId && (
-          <Button onClick={deleteSelected} variant="destructive" size="sm" className="flex items-center gap-2">
-            <Trash2 className="w-4 h-4" />
-            Supprimer
-          </Button>
-        )}
-        <Button onClick={saveCanvas} className="ml-auto bg-invitation-purple hover:bg-invitation-purple-dark">
-          Sauvegarder
-        </Button>
-      </div>
-      
-      {/* Canvas */}
-      <div className="border rounded-md overflow-hidden shadow-sm bg-white">
-        <Stage
-          width={width}
-          height={height}
-          onMouseDown={checkDeselect}
-          onTouchStart={checkDeselect}
-          ref={stageRef}
-        >
-          <Layer>
-            {objects.map((obj) => {
-              const isSelected = obj.id === selectedId;
-              
-              if (obj.type === 'text') {
-                return (
-                  <Text
-                    key={obj.id}
-                    id={obj.id}
-                    x={obj.x}
-                    y={obj.y}
-                    text={obj.text}
-                    fontSize={obj.fontSize}
-                    fill={obj.fill}
-                    draggable={true}
-                    onClick={() => setSelectedId(obj.id)}
-                    onTap={() => setSelectedId(obj.id)}
-                    onDragEnd={(e) => {
-                      handleObjectChange(obj.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      });
-                    }}
-                    stroke={isSelected ? "#0096FF" : undefined}
-                    strokeWidth={isSelected ? 1 : undefined}
-                  />
-                );
+    <div
+      className="relative border rounded-md overflow-hidden bg-white shadow-sm flex justify-center"
+      style={{ width: '100%', overflow: 'hidden' }}
+    >
+      <Stage
+        ref={stageRef}
+        width={canvasSize.width}
+        height={canvasSize.height}
+        onMouseDown={handleStageMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        scaleX={zoomScale}
+        scaleY={zoomScale}
+        x={stagePos.x}
+        y={stagePos.y}
+        style={{ touchAction: 'none' }}
+      >
+        <Layer ref={layerRef}>
+          {objects.map(renderShape)}
+          <Transformer
+            ref={transformerRef}
+            boundBoxFunc={(oldBox, newBox) => {
+              // Limiter la taille minimale
+              if (newBox.width < 5 || newBox.height < 5) {
+                return oldBox;
               }
-              
-              if (obj.type === 'rect') {
-                return (
-                  <Rect
-                    key={obj.id}
-                    id={obj.id}
-                    x={obj.x}
-                    y={obj.y}
-                    width={obj.width}
-                    height={obj.height}
-                    fill={obj.fill}
-                    draggable={true}
-                    onClick={() => setSelectedId(obj.id)}
-                    onTap={() => setSelectedId(obj.id)}
-                    onDragEnd={(e) => {
-                      handleObjectChange(obj.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      });
-                    }}
-                    stroke={isSelected ? "#0096FF" : undefined}
-                    strokeWidth={isSelected ? 1 : undefined}
-                  />
-                );
-              }
-              
-              if (obj.type === 'circle') {
-                return (
-                  <Circle
-                    key={obj.id}
-                    id={obj.id}
-                    x={obj.x}
-                    y={obj.y}
-                    radius={obj.radius}
-                    fill={obj.fill}
-                    draggable={true}
-                    onClick={() => setSelectedId(obj.id)}
-                    onTap={() => setSelectedId(obj.id)}
-                    onDragEnd={(e) => {
-                      handleObjectChange(obj.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      });
-                    }}
-                    stroke={isSelected ? "#0096FF" : undefined}
-                    strokeWidth={isSelected ? 1 : undefined}
-                  />
-                );
-              }
-              
-              if (obj.type === 'image') {
-                return (
-                  <KonvaImage
-                    key={obj.id}
-                    id={obj.id}
-                    x={obj.x}
-                    y={obj.y}
-                    width={obj.width}
-                    height={obj.height}
-                    image={() => {
-                      const img = new window.Image();
-                      img.src = obj.src;
-                      return img;
-                    }}
-                    draggable={true}
-                    onClick={() => setSelectedId(obj.id)}
-                    onTap={() => setSelectedId(obj.id)}
-                    onDragEnd={(e) => {
-                      handleObjectChange(obj.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      });
-                    }}
-                    stroke={isSelected ? "#0096FF" : undefined}
-                    strokeWidth={isSelected ? 1 : undefined}
-                  />
-                );
-              }
-              
-              return null;
-            })}
-          </Layer>
-        </Stage>
-      </div>
+              return newBox;
+            }}
+          />
+        </Layer>
+      </Stage>
     </div>
   );
 };

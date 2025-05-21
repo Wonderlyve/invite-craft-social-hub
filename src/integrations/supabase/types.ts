@@ -110,10 +110,46 @@ export type Database = {
           },
         ]
       }
+      invitation_layers: {
+        Row: {
+          created_at: string
+          id: string
+          invitation_id: string
+          object_data: Json
+          updated_at: string
+          z_index: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitation_id: string
+          object_data: Json
+          updated_at?: string
+          z_index: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitation_id?: string
+          object_data?: Json
+          updated_at?: string
+          z_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_layers_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           canvas_data: Json
           created_at: string
+          decorations: Json | null
           event_id: string
           id: string
           template_id: string
@@ -122,6 +158,7 @@ export type Database = {
         Insert: {
           canvas_data: Json
           created_at?: string
+          decorations?: Json | null
           event_id: string
           id?: string
           template_id: string
@@ -130,6 +167,7 @@ export type Database = {
         Update: {
           canvas_data?: Json
           created_at?: string
+          decorations?: Json | null
           event_id?: string
           id?: string
           template_id?: string
@@ -247,7 +285,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_invitation_owner: {
+        Args: { invitation_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
