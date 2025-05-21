@@ -1,9 +1,9 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Text, Rect, Circle, Image as KonvaImage, Star, Path, Group, Line } from "react-konva";
 import { useEditor } from "./EditorContext";
 import Konva from "konva";
 import { toast } from "sonner";
+import useImage from "use-image";
 
 interface KonvaCanvasProps {
   width: number;
@@ -440,6 +440,37 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     }
   };
 
+  const TransformerComponent = ({ selectedId }) => {
+    const transformerRef = useRef();
+    
+    useEffect(() => {
+      if (selectedId && transformerRef.current) {
+        const stage = transformerRef.current.getStage();
+        const selectedNode = stage.findOne('#' + selectedId);
+        
+        if (selectedNode) {
+          transformerRef.current.nodes([selectedNode]);
+          transformerRef.current.getLayer().batchDraw();
+        } else {
+          transformerRef.current.nodes([]);
+          transformerRef.current.getLayer().batchDraw();
+        }
+      }
+    }, [selectedId]);
+    
+    return (
+      <KonvaTransformer
+        ref={transformerRef}
+        boundBoxFunc={(oldBox, newBox) => {
+          if (newBox.width < 5 || newBox.height < 5) {
+            return oldBox;
+          }
+          return newBox;
+        }}
+      />
+    );
+  };
+
   return (
     <div
       className="relative border rounded-md overflow-hidden bg-white shadow-sm flex justify-center"
@@ -461,16 +492,7 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
       >
         <Layer ref={layerRef}>
           {objects.map(renderShape)}
-          <Transformer
-            ref={transformerRef}
-            boundBoxFunc={(oldBox, newBox) => {
-              // Limiter la taille minimale
-              if (newBox.width < 5 || newBox.height < 5) {
-                return oldBox;
-              }
-              return newBox;
-            }}
-          />
+          <TransformerComponent selectedId={selectedId} />
         </Layer>
       </Stage>
     </div>

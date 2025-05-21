@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Check, Plus, X, Edit, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Guest, convertToGuests } from "@/types/guest";
 
 interface Guest {
   id: string;
@@ -44,10 +44,12 @@ const GuestList = ({ eventId }: GuestListProps) => {
           .from('guests')
           .select('*')
           .eq('event_id', eventId)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false });
         
         if (error) throw error;
-        setGuests(data || []);
+        
+        // Convertir les données en objets Guest correctement typés
+        setGuests(convertToGuests(data || []));
       } catch (error) {
         console.error("Erreur lors du chargement des invités:", error);
         toast.error("Erreur lors du chargement des invités");
@@ -103,23 +105,23 @@ const GuestList = ({ eventId }: GuestListProps) => {
     setIsDialogOpen(true);
   };
   
-  const handleUpdateGuest = async () => {
+  const handleUpdateGuest = async (updatedGuest: Guest) => {
     if (!editGuest) return;
     
     try {
       const { error } = await supabase
         .from('guests')
         .update({
-          full_name: editGuest.full_name,
-          email: editGuest.email,
-          table_name: editGuest.table_name,
+          full_name: updatedGuest.full_name,
+          email: updatedGuest.email,
+          table_name: updatedGuest.table_name,
         })
-        .eq('id', editGuest.id);
+        .eq('id', updatedGuest.id);
       
       if (error) throw error;
       
       // Mettre à jour l'état local
-      setGuests(guests.map(g => g.id === editGuest.id ? editGuest : g));
+      setGuests(guests.map(g => g.id === updatedGuest.id ? updatedGuest : g));
       setIsDialogOpen(false);
       toast.success("Invité mis à jour avec succès");
     } catch (error) {
