@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { Circle, Rect, Text, Image } from 'react-konva';
 
 interface CircleProps {
@@ -55,83 +56,93 @@ interface ImageProps {
   rotation: number;
 }
 
-const renderCircle = (props: any) => {
-  const radius = props.radius || 0;
-  
-  return (
-    <Circle
-      x={props.x}
-      y={props.y}
-      radius={radius}
-      fill={props.fill}
-      id={props.id}
-      draggable={props.draggable}
-      onDragStart={props.onDragStart}
-      onDragEnd={props.onDragEnd}
-      onClick={props.onClick}
-    />
-  );
-};
+// Composant principal qui rend les différentes formes
+interface ShapeRendererProps {
+  obj: any;
+  setSelectedId: (id: string | null) => void;
+  handleObjectChange: (id: string, newProps: any) => void;
+  isSelected: boolean;
+  fontFamily: string;
+}
 
-const renderRectangle = (props: any) => {
-  return (
-    <Rect
-      x={props.x}
-      y={props.y}
-      width={props.width}
-      height={props.height}
-      fill={props.fill}
-      id={props.id}
-      draggable={props.draggable}
-      onDragStart={props.onDragStart}
-      onDragEnd={props.onDragEnd}
-      onClick={props.onClick}
-    />
-  );
-};
+// Fonction pour déterminer le type d'objet et rendre le composant approprié
+const ShapeRenderer: React.FC<ShapeRendererProps> = ({ 
+  obj, 
+  setSelectedId, 
+  handleObjectChange, 
+  isSelected,
+  fontFamily
+}) => {
+  const commonProps = {
+    id: obj.id,
+    draggable: true,
+    onDragStart: () => setSelectedId(obj.id),
+    onDragEnd: (e: any) => {
+      handleObjectChange(obj.id, {
+        x: e.target.x(),
+        y: e.target.y()
+      });
+    },
+    onClick: () => setSelectedId(obj.id)
+  };
 
-const renderText = (props: any) => {
-  return (
-    <Text
-      x={props.x}
-      y={props.y}
-      text={props.text}
-      fontSize={props.fontSize}
-      fontFamily={props.fontFamily}
-      fill={props.fill}
-      id={props.id}
-      draggable={props.draggable}
-      onDragStart={props.onDragStart}
-      onDragEnd={props.onDragEnd}
-      onClick={props.onClick}
-      rotation={props.rotation}
-    />
-  );
-};
-
-const renderImage = (props: any) => {
-  return (
-    <Image
-      x={props.x}
-      y={props.y}
-      image={props.image}
-      width={props.width}
-      height={props.height}
-      id={props.id}
-      draggable={props.draggable}
-      onDragStart={props.onDragStart}
-      onDragEnd={props.onDragEnd}
-      onClick={props.onClick}
-      rotation={props.rotation}
-    />
-  );
-};
-
-const ShapeRenderer = {
-  circle: renderCircle,
-  rectangle: renderRectangle,
-  text: renderText,
-  image: renderImage,
+  switch (obj.type) {
+    case 'circle':
+      return (
+        <Circle
+          {...commonProps}
+          x={obj.x}
+          y={obj.y}
+          radius={obj.radius || 50}
+          fill={obj.fill}
+        />
+      );
+    
+    case 'rect':
+      return (
+        <Rect
+          {...commonProps}
+          x={obj.x}
+          y={obj.y}
+          width={obj.width}
+          height={obj.height}
+          fill={obj.fill}
+        />
+      );
+    
+    case 'text':
+      return (
+        <Text
+          {...commonProps}
+          x={obj.x}
+          y={obj.y}
+          text={obj.text}
+          fontSize={obj.fontSize}
+          fontFamily={obj.fontFamily || fontFamily}
+          fill={obj.fill}
+          rotation={obj.rotation || 0}
+        />
+      );
+    
+    case 'image':
+      const imageElement = new window.Image();
+      imageElement.src = obj.src;
+      
+      return (
+        <Image
+          {...commonProps}
+          x={obj.x}
+          y={obj.y}
+          image={imageElement}
+          width={obj.width}
+          height={obj.height}
+          rotation={obj.rotation || 0}
+        />
+      );
+    
+    default:
+      return null;
+  }
 };
 
 export default ShapeRenderer;

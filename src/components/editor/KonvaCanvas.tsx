@@ -6,6 +6,7 @@ import Konva from "konva";
 import TransformerComponent from "./transformer/TransformerComponent";
 import ShapeRenderer from "./shapes/ShapeRenderer";
 import { useCanvasHandlers } from "./hooks/useCanvasHandlers";
+import useImage from "use-image";
 
 interface KonvaCanvasProps {
   width: number;
@@ -28,6 +29,9 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   const layerRef = useRef<Konva.Layer>(null);
   
   const [canvasSize, setCanvasSize] = useState({ width, height });
+  // Référence à l'image de fond
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [bgImage] = useImage(backgroundImage || '');
   
   const {
     handleObjectChange,
@@ -43,6 +47,9 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   useEffect(() => {
     if (initialData && initialData.objects) {
       setObjects(initialData.objects);
+      if (initialData.backgroundImage) {
+        setBackgroundImage(initialData.backgroundImage);
+      }
     }
   }, [initialData, setObjects]);
 
@@ -62,9 +69,15 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
       objects,
       width,
       height,
+      backgroundImage
     };
     
     onSave(canvasData);
+  };
+
+  // Mettre à jour l'image de fond
+  const updateBackgroundImage = (image: string) => {
+    setBackgroundImage(image);
   };
 
   return (
@@ -87,6 +100,16 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
         style={{ touchAction: 'none' }}
       >
         <Layer ref={layerRef}>
+          {/* Afficher l'image de fond si elle existe */}
+          {bgImage && (
+            <Image
+              image={bgImage}
+              width={width}
+              height={height}
+              opacity={0.5}
+            />
+          )}
+          
           {objects.map(obj => (
             <ShapeRenderer
               key={obj.id}

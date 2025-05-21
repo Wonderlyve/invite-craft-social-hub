@@ -1,12 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEditor } from "./EditorContext";
 import { useState } from "react";
@@ -75,45 +68,37 @@ export default function DecorationItems() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="py-2">
-        <CardTitle className="text-sm font-medium">Décorations</CardTitle>
-        <CardDescription className="text-xs">
-          Ajoutez des éléments décoratifs
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-2 py-1">
-        <div className="flex overflow-x-auto pb-2 space-x-2">
-          {DECORATION_CATEGORIES.map((category) => (
+    <div className="space-y-3">
+      <div className="flex overflow-x-auto pb-2 space-x-2">
+        {DECORATION_CATEGORIES.map((category) => (
+          <Button
+            key={category.name}
+            variant={activeCategory === category.name ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveCategory(category.name)}
+            className="flex-shrink-0 text-xs"
+          >
+            {category.name}
+          </Button>
+        ))}
+      </div>
+
+      <ScrollArea className="h-32 border rounded-md p-2">
+        <div className="grid grid-cols-4 gap-2">
+          {DECORATION_CATEGORIES.find(
+            (category) => category.name === activeCategory
+          )?.items.map((item) => (
             <Button
-              key={category.name}
-              variant={activeCategory === category.name ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveCategory(category.name)}
-              className="flex-shrink-0"
+              key={item.name}
+              variant="outline"
+              className="h-12 text-xl flex items-center justify-center p-0"
+              onClick={() => addDecoration(item)}
             >
-              {category.name}
+              {item.svg}
             </Button>
           ))}
         </div>
-
-        <ScrollArea className="h-32 mt-2">
-          <div className="grid grid-cols-4 gap-2 p-2">
-            {DECORATION_CATEGORIES.find(
-              (category) => category.name === activeCategory
-            )?.items.map((item) => (
-              <Button
-                key={item.name}
-                variant="outline"
-                className="h-12 text-xl flex items-center justify-center"
-                onClick={() => addDecoration(item)}
-              >
-                {item.svg}
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+      </ScrollArea>
+    </div>
   );
 }

@@ -21,6 +21,8 @@ interface EditorContextType {
   setFontFamily: Dispatch<SetStateAction<string>>;
   gradientColor: GradientColor;
   setGradientColor: Dispatch<SetStateAction<GradientColor>>;
+  backgroundImage: string | null;
+  setBackgroundImage: Dispatch<SetStateAction<string | null>>;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined);
@@ -31,6 +33,7 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
   const [layers, setLayers] = useState<any[]>([]);
   const [zoomScale, setZoomScale] = useState(1);
   const [fontFamily, setFontFamily] = useState("Arial");
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [gradientColor, setGradientColor] = useState<GradientColor>({
     start: "#ffffff",
     end: "#000000",
@@ -51,7 +54,9 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
       fontFamily,
       setFontFamily,
       gradientColor,
-      setGradientColor
+      setGradientColor,
+      backgroundImage,
+      setBackgroundImage
     }}>
       {children}
     </EditorContext.Provider>

@@ -13,6 +13,8 @@ interface ToolPanelProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+// Ce composant n'est plus utilisé directement car remplacé par ToolsDrawer
+// Mais on le garde pour compatiblité avec d'autres composants qui pourraient l'utiliser
 const ToolPanel = ({ onTextAdd, onImageUpload }: ToolPanelProps) => {
   return (
     <div className="space-y-4 hidden lg:block">
