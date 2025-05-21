@@ -19,65 +19,67 @@ import NotFound from "./pages/NotFound";
 // Create a client
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            
-            <Route 
-              path="/events" 
-              element={
-                <ProtectedRoute>
-                  <EventsPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/events/create" 
-              element={
-                <ProtectedRoute>
-                  <CreateEventPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/designs" 
-              element={<DesignsPage />} 
-            />
-            
-            <Route 
-              path="/editor" 
-              element={
-                <ProtectedRoute>
-                  <EditorPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/events/:eventId/guests" 
-              element={
-                <ProtectedRoute>
-                  <GuestsPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              
+              <Route 
+                path="/events" 
+                element={
+                  <ProtectedRoute>
+                    <EventsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/events/create" 
+                element={
+                  <ProtectedRoute>
+                    <CreateEventPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/designs" 
+                element={<DesignsPage />} 
+              />
+              
+              <Route 
+                path="/editor" 
+                element={
+                  <ProtectedRoute>
+                    <EditorPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/events/:eventId/guests" 
+                element={
+                  <ProtectedRoute>
+                    <GuestsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
