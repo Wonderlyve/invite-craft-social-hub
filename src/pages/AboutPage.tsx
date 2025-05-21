@@ -2,7 +2,7 @@
 import PageContainer from "@/components/layout/PageContainer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Mail, GitHub, Heart } from "lucide-react";
+import { Mail, Github, Heart } from "lucide-react";
 
 const AboutPage = () => {
   return (
@@ -78,7 +78,7 @@ const AboutPage = () => {
               contact@invitari.com
             </Button>
             <Button variant="outline" className="gap-2">
-              <GitHub className="h-4 w-4" />
+              <Github className="h-4 w-4" />
               GitHub
             </Button>
           </div>

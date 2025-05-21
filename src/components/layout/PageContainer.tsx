@@ -20,7 +20,7 @@ const PageContainer = ({
   showBottomBar = true
 }: PageContainerProps) => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-background/95">
       {showNavbar && <Navbar />}
       <div className={`container mx-auto px-4 py-8 mt-16 flex-grow pb-16 md:pb-8 ${className}`}>
         {children}
