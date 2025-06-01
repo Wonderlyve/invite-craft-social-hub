@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Stage, Layer } from "react-konva";
+import { Stage, Layer, Image } from "react-konva";
 import { useEditor } from "./EditorContext";
 import Konva from "konva";
 import TransformerComponent from "./transformer/TransformerComponent";

@@ -18,30 +18,57 @@ const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) 
           Voici comment votre invitation sera présentée à vos invités.
         </p>
       </div>
-      <div className="border border-border rounded-md p-4 md:p-8 bg-white shadow-md max-w-full overflow-x-auto">
+      
+      {/* Aperçu responsive avec format 1080x1920 */}
+      <div className="border border-border rounded-md p-4 md:p-8 bg-white shadow-md max-w-full overflow-auto">
         {canvasData ? (
-          <div className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] transform scale-[0.5] md:scale-100 origin-top-left md:origin-center">
-            <KonvaCanvas 
-              width={600} 
-              height={800} 
-              initialData={canvasData}
-              onSave={onSaveCanvas}
-            />
+          <div className="flex justify-center">
+            <div className="relative">
+              {/* Version mobile - réduite */}
+              <div className="block md:hidden">
+                <div className="w-[216px] h-[384px] transform scale-100 origin-center">
+                  <KonvaCanvas 
+                    width={1080} 
+                    height={1920} 
+                    initialData={canvasData}
+                    onSave={onSaveCanvas}
+                  />
+                </div>
+              </div>
+              
+              {/* Version desktop - plus grande */}
+              <div className="hidden md:block">
+                <div className="w-[324px] h-[576px] transform scale-100 origin-center">
+                  <KonvaCanvas 
+                    width={1080} 
+                    height={1920} 
+                    initialData={canvasData}
+                    onSave={onSaveCanvas}
+                  />
+                </div>
+              </div>
+              
+              {/* Indicateur de format */}
+              <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                Format: 1080 × 1920 px
+              </div>
+            </div>
           </div>
         ) : (
           <img 
             src="/placeholder.svg" 
             alt="Aperçu de l'invitation" 
-            className="w-[300px] md:w-[600px] h-[400px] md:h-[800px] object-contain"
+            className="w-[216px] md:w-[324px] h-[384px] md:h-[576px] object-contain"
           />
         )}
       </div>
+      
       <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3">
         <Button variant="outline" size="sm" className="sm:text-base">
           <Eye className="mr-2 h-4 w-4" /> Prévisualiser par invité
         </Button>
         <Button 
-          className="bg-invitation-purple hover:bg-invitation-purple-dark sm:text-base" 
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 sm:text-base text-white" 
           size="sm"
           onClick={handleShare}
         >

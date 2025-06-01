@@ -57,11 +57,11 @@ const EditorTab = ({
       {/* Drawer pour les outils */}
       <ToolsDrawer onTextAdd={onTextAdd} onImageUpload={onImageUpload} />
       
-      {/* Zone d'édition principale */}
-      <Card className="p-2 sm:p-4">
+      {/* Zone d'édition principale - Optimisée pour les grandes invitations */}
+      <Card className="p-2 sm:p-6">
         {canvasData && (
           <>
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <CanvasControls onSave={handleSave} />
               
               <Button 
@@ -83,16 +83,24 @@ const EditorTab = ({
               </Button>
             </div>
             
-            <div className="flex justify-center">
-              <KonvaCanvas 
-                width={600} 
-                height={800} 
-                initialData={{
-                  ...canvasData,
-                  backgroundImage: backgroundImageUrl
-                }}
-                onSave={onSaveCanvas}
-              />
+            {/* Conteneur responsive pour l'invitation - Format 1080x1920 */}
+            <div className="flex justify-center bg-gray-50 rounded-lg p-4 min-h-[600px] overflow-auto">
+              <div className="relative">
+                <KonvaCanvas 
+                  width={1080} 
+                  height={1920} 
+                  initialData={{
+                    ...canvasData,
+                    backgroundImage: backgroundImageUrl
+                  }}
+                  onSave={onSaveCanvas}
+                />
+                
+                {/* Indicateur de format */}
+                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                  1080 × 1920 px
+                </div>
+              </div>
             </div>
           </>
         )}
