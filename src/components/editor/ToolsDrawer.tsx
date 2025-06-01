@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronRight, PanelLeft, Palette, Type, Image, Square, CircleOff } from "lucide-react";
 import FontSelector from "./FontSelector";
 import ShapesPanel from "./ShapesPanel";
-import GradientPicker from "./GradientPicker";
+import ColorModeSelector from "./ColorModeSelector";
 import LayersPanel from "./LayersPanel";
 import DecorationItems from "./DecorationItems";
 
@@ -117,8 +117,8 @@ export default function ToolsDrawer({ onTextAdd, onImageUpload }: ToolsDrawerPro
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-sm font-semibold">Couleurs et dégradés</h3>
-                  <GradientPicker />
+                  <h3 className="text-sm font-semibold">Couleurs</h3>
+                  <ColorModeSelector />
                 </div>
               </TabsContent>
 
