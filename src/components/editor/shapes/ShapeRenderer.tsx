@@ -63,8 +63,8 @@ const ShapeRenderer: React.FC<ShapeRendererProps> = ({
         frameComponent = (
           <Circle
             {...frameProps}
-            x: obj.x}
-            y: obj.y}
+            x={obj.x}
+            y={obj.y}
             radius={(obj.width || obj.radius || 50) + thickness}
           />
         );
