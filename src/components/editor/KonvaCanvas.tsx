@@ -29,7 +29,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   const layerRef = useRef<Konva.Layer>(null);
   
   const [canvasSize, setCanvasSize] = useState({ width, height });
-  // Référence à l'image de fond
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [bgImage] = useImage(backgroundImage || '');
   
@@ -43,7 +42,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     stagePos
   } = useCanvasHandlers(stageRef, layerRef);
 
-  // Chargement des données initiales
   useEffect(() => {
     if (initialData && initialData.objects) {
       setObjects(initialData.objects);
@@ -53,7 +51,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     }
   }, [initialData, setObjects]);
 
-  // Adapter la taille du canvas au zoom
   useEffect(() => {
     setCanvasSize({
       width: width * zoomScale,
@@ -64,7 +61,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   const handleExportClick = () => {
     if (!stageRef.current) return;
     
-    // Sauvegarder les données du canvas
     const canvasData = {
       objects,
       width,
@@ -75,7 +71,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     onSave(canvasData);
   };
 
-  // Mettre à jour l'image de fond
   const updateBackgroundImage = (image: string) => {
     setBackgroundImage(image);
   };
@@ -100,7 +95,6 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
         style={{ touchAction: 'none' }}
       >
         <Layer ref={layerRef}>
-          {/* Afficher l'image de fond si elle existe */}
           {bgImage && (
             <Image
               image={bgImage}

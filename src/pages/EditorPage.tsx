@@ -148,6 +148,9 @@ const EditorPage = () => {
   const addText = () => {
     if (!canvasData) return;
     
+    const centerX = 540; // 1080 / 2
+    const centerY = 950; // 1900 / 2
+    
     const updatedData = {
       ...canvasData,
       objects: [
@@ -155,14 +158,14 @@ const EditorPage = () => {
         {
           id: `text-${Date.now()}`,
           type: 'text',
-          x: 100,
-          y: 100,
+          x: centerX - 80,
+          y: centerY - 10,
           text: 'Votre texte ici',
-          fontSize: 20,
+          fontSize: 18,
           fontFamily: 'Arial',
           fill: '#333333',
           draggable: true,
-          width: 200,
+          width: 160,
         }
       ]
     };
@@ -183,8 +186,11 @@ const EditorPage = () => {
       img.src = event.target.result.toString();
       
       img.onload = () => {
+        const centerX = 540; // 1080 / 2
+        const centerY = 950; // 1900 / 2
+        
         const aspectRatio = img.width / img.height;
-        const newWidth = 200;
+        const newWidth = 150;
         const newHeight = newWidth / aspectRatio;
         
         const updatedData = {
@@ -194,8 +200,8 @@ const EditorPage = () => {
             {
               id: `image-${Date.now()}`,
               type: 'image',
-              x: 100,
-              y: 100,
+              x: centerX - newWidth / 2,
+              y: centerY - newHeight / 2,
               width: newWidth,
               height: newHeight,
               src: event.target?.result.toString(),
@@ -224,39 +230,50 @@ const EditorPage = () => {
   
   return (
     <EditorProvider>
-      <PageContainer className="max-w-6xl px-0 sm:px-4">
-        <Header 
-          isSaving={isSaving} 
-          handleSave={() => {
-            if (canvasData) handleSave();
-          }} 
-          handleShare={handleShare}
-        />
+      <PageContainer className="max-w-6xl px-0 sm:px-4 h-screen flex flex-col">
+        {/* Header fixe */}
+        <div className="flex-shrink-0">
+          <Header 
+            isSaving={isSaving} 
+            handleSave={() => {
+              if (canvasData) handleSave();
+            }} 
+            handleShare={handleShare}
+          />
+        </div>
         
-        <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="mb-4 px-4 sm:px-0">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="editor">Éditeur</TabsTrigger>
-            <TabsTrigger value="preview">Aperçu</TabsTrigger>
-          </TabsList>
-          <TabsContent value="editor" className="mt-4">
-            <EditorTab
-              canvasData={canvasData}
-              onSaveCanvas={setCanvasData}
-              onTextAdd={addText}
-              onImageUpload={uploadImage}
-              handleSave={() => {
-                if (canvasData) handleSave();
-              }}
-            />
-          </TabsContent>
-          <TabsContent value="preview" className="mt-4 px-2 sm:px-0">
-            <PreviewTab
-              canvasData={canvasData}
-              onSaveCanvas={setCanvasData}
-              handleShare={handleShare}
-            />
-          </TabsContent>
-        </Tabs>
+        {/* Contenu principal */}
+        <div className="flex-1 overflow-hidden">
+          <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
+            <div className="flex-shrink-0 px-4 sm:px-0 mb-4">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="editor">Éditeur</TabsTrigger>
+                <TabsTrigger value="preview">Aperçu</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+              <TabsContent value="editor" className="h-full">
+                <EditorTab
+                  canvasData={canvasData}
+                  onSaveCanvas={setCanvasData}
+                  onTextAdd={addText}
+                  onImageUpload={uploadImage}
+                  handleSave={() => {
+                    if (canvasData) handleSave();
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="preview" className="h-full px-2 sm:px-0">
+                <PreviewTab
+                  canvasData={canvasData}
+                  onSaveCanvas={setCanvasData}
+                  handleShare={handleShare}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </PageContainer>
     </EditorProvider>
   );

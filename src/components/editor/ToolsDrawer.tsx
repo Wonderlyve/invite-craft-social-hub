@@ -27,7 +27,7 @@ export default function ToolsDrawer({ onTextAdd, onImageUpload }: ToolsDrawerPro
   const [activeTab, setActiveTab] = useState("elements");
 
   return (
-    <div className="fixed top-24 left-0 z-30">
+    <div className="fixed top-20 left-0 z-30">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button 
@@ -36,57 +36,59 @@ export default function ToolsDrawer({ onTextAdd, onImageUpload }: ToolsDrawerPro
             className="rounded-r-full rounded-l-none shadow-lg border-l-0"
           >
             {open ? (
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             ) : (
-              <PanelLeft className="h-5 w-5" />
+              <PanelLeft className="h-4 w-4" />
             )}
-            <span className="ml-2">{open ? "Fermer" : "Outils"}</span>
+            <span className="ml-2 text-sm">{open ? "Fermer" : "Outils"}</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] sm:w-[450px] sm:max-w-md p-0">
-          <SheetHeader className="p-4 border-b">
-            <SheetTitle>Outils d'édition</SheetTitle>
-            <SheetDescription>
+        <SheetContent side="left" className="w-[280px] sm:w-[350px] sm:max-w-md p-0 overflow-y-auto">
+          <SheetHeader className="p-3 border-b">
+            <SheetTitle className="text-lg">Outils d'édition</SheetTitle>
+            <SheetDescription className="text-sm">
               Personnalisez votre invitation
             </SheetDescription>
           </SheetHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="px-1 py-2">
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="elements">
-                <Square className="h-4 w-4 mr-2" />
+            <TabsList className="grid grid-cols-3 w-full mx-2">
+              <TabsTrigger value="elements" className="text-xs">
+                <Square className="h-3 w-3 mr-1" />
                 Éléments
               </TabsTrigger>
-              <TabsTrigger value="style">
-                <Palette className="h-4 w-4 mr-2" />
+              <TabsTrigger value="style" className="text-xs">
+                <Palette className="h-3 w-3 mr-1" />
                 Style
               </TabsTrigger>
-              <TabsTrigger value="layers">
-                <PanelLeft className="h-4 w-4 mr-2" />
+              <TabsTrigger value="layers" className="text-xs">
+                <PanelLeft className="h-3 w-3 mr-1" />
                 Calques
               </TabsTrigger>
             </TabsList>
 
-            <div className="p-3">
-              <TabsContent value="elements" className="space-y-4 mt-2">
+            <div className="p-2 space-y-4 max-h-[calc(100vh-150px)] overflow-y-auto">
+              <TabsContent value="elements" className="space-y-3 mt-2">
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold">Ajouter des éléments</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <Button 
                       variant="outline" 
+                      size="sm"
                       onClick={onTextAdd}
-                      className="justify-start"
+                      className="justify-start text-xs"
                     >
-                      <Type className="h-4 w-4 mr-2" />
+                      <Type className="h-3 w-3 mr-1" />
                       Texte
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="justify-start"
+                      size="sm"
+                      className="justify-start text-xs"
                       asChild
                     >
                       <label>
-                        <Image className="h-4 w-4 mr-2" />
+                        <Image className="h-3 w-3 mr-1" />
                         Image
                         <input 
                           type="file" 
@@ -110,7 +112,7 @@ export default function ToolsDrawer({ onTextAdd, onImageUpload }: ToolsDrawerPro
                 </div>
               </TabsContent>
 
-              <TabsContent value="style" className="space-y-4 mt-2">
+              <TabsContent value="style" className="space-y-3 mt-2">
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold">Polices</h3>
                   <FontSelector />

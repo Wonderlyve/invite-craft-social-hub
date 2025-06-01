@@ -79,33 +79,33 @@ export default function DecorationItems() {
   const addDecoration = (decoration: any) => {
     const id = `deco-${Date.now()}`;
     
-    // Centrer l'élément dans la zone de travail (1080x1920)
+    // Centrer l'élément dans la zone de travail (1080x1900)
     const centerX = 540; // 1080 / 2
-    const centerY = 960; // 1920 / 2
+    const centerY = 950; // 1900 / 2
     
     if (decoration.image && !decoration.svg) {
-      // Ajouter une image
+      // Ajouter une image avec des dimensions réduites
       setObjects([...objects, {
         id,
         type: 'image',
-        x: centerX - 75, // Centrer l'image de 150px de large
-        y: centerY - 100, // Centrer l'image de 200px de haut
+        x: centerX - 60, // Centrer l'image de 120px de large
+        y: centerY - 80, // Centrer l'image de 160px de haut
         src: decoration.image,
-        width: 150,
-        height: 200,
+        width: 120,
+        height: 160,
         draggable: true,
       }]);
     } else {
-      // Ajouter un emoji/texte
+      // Ajouter un emoji/texte avec une taille réduite
       setObjects([...objects, {
         id,
         type: 'text',
-        x: centerX - 40, // Centrer le texte
-        y: centerY - 30,
+        x: centerX - 25, // Centrer le texte
+        y: centerY - 25,
         text: decoration.svg,
-        fontSize: 60,
+        fontSize: 50,
         draggable: true,
-        width: 80,
+        width: 50,
       }]);
     }
     setSelectedId(id);

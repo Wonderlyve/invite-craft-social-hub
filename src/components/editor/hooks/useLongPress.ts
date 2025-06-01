@@ -1,5 +1,6 @@
 
 import { useCallback, useRef, useState } from 'react';
+import Konva from 'konva';
 
 interface UseLongPressOptions {
   onLongPress: () => void;
@@ -17,7 +18,7 @@ export const useLongPress = ({
   const target = useRef<EventTarget>();
 
   const start = useCallback(
-    (event: React.MouseEvent | React.TouchEvent) => {
+    (event: Konva.KonvaEventObject<MouseEvent> | Konva.KonvaEventObject<TouchEvent>) => {
       if (event.target !== target.current) {
         target.current = event.target;
         setLongPressTriggered(false);
@@ -32,7 +33,7 @@ export const useLongPress = ({
   );
 
   const clear = useCallback(
-    (event: React.MouseEvent | React.TouchEvent, shouldTriggerClick = true) => {
+    (event: Konva.KonvaEventObject<MouseEvent> | Konva.KonvaEventObject<TouchEvent>, shouldTriggerClick = true) => {
       timeout.current && clearTimeout(timeout.current);
       
       if (shouldTriggerClick && !longPressTriggered && onClick) {
@@ -45,10 +46,10 @@ export const useLongPress = ({
   );
 
   return {
-    onMouseDown: (e: React.MouseEvent) => start(e),
-    onTouchStart: (e: React.TouchEvent) => start(e),
-    onMouseUp: (e: React.MouseEvent) => clear(e),
-    onMouseLeave: (e: React.MouseEvent) => clear(e, false),
-    onTouchEnd: (e: React.TouchEvent) => clear(e),
+    onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => start(e),
+    onTouchStart: (e: Konva.KonvaEventObject<TouchEvent>) => start(e),
+    onMouseUp: (e: Konva.KonvaEventObject<MouseEvent>) => clear(e),
+    onMouseLeave: (e: Konva.KonvaEventObject<MouseEvent>) => clear(e, false),
+    onTouchEnd: (e: Konva.KonvaEventObject<TouchEvent>) => clear(e),
   };
 };
