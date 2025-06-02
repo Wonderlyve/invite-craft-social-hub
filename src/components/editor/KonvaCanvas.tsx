@@ -28,7 +28,23 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   const stageRef = useRef<Konva.Stage>(null);
   const layerRef = useRef<Konva.Layer>(null);
   
-  const [canvasSize, setCanvasSize] = useState({ width, height });
+  // Calculer les dimensions pour s'adapter à l'écran sans scroll
+  const maxWidth = window.innerWidth * 0.6; // 60% de la largeur de l'écran
+  const maxHeight = window.innerHeight * 0.7; // 70% de la hauteur de l'écran
+  
+  const aspectRatio = width / height;
+  let canvasWidth = maxWidth;
+  let canvasHeight = maxWidth / aspectRatio;
+  
+  if (canvasHeight > maxHeight) {
+    canvasHeight = maxHeight;
+    canvasWidth = maxHeight * aspectRatio;
+  }
+  
+  const [canvasSize, setCanvasSize] = useState({ 
+    width: canvasWidth, 
+    height: canvasHeight 
+  });
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [bgImage] = useImage(backgroundImage || '');
   
@@ -52,11 +68,22 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
   }, [initialData, setObjects]);
 
   useEffect(() => {
+    const newMaxWidth = window.innerWidth * 0.6;
+    const newMaxHeight = window.innerHeight * 0.7;
+    
+    let newCanvasWidth = newMaxWidth;
+    let newCanvasHeight = newMaxWidth / aspectRatio;
+    
+    if (newCanvasHeight > newMaxHeight) {
+      newCanvasHeight = newMaxHeight;
+      newCanvasWidth = newMaxHeight * aspectRatio;
+    }
+    
     setCanvasSize({
-      width: width * zoomScale,
-      height: height * zoomScale
+      width: newCanvasWidth * zoomScale,
+      height: newCanvasHeight * zoomScale
     });
-  }, [width, height, zoomScale]);
+  }, [width, height, zoomScale, aspectRatio]);
 
   const handleExportClick = () => {
     if (!stageRef.current) return;
@@ -75,10 +102,18 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     setBackgroundImage(image);
   };
 
+  // Calculer le scale pour l'affichage
+  const displayScale = Math.min(canvasSize.width / width, canvasSize.height / height);
+
   return (
     <div
-      className="relative border rounded-md overflow-hidden bg-white shadow-sm flex justify-center"
-      style={{ width: '100%', overflow: 'hidden' }}
+      className="relative border rounded-md overflow-hidden bg-white shadow-sm flex justify-center items-center"
+      style={{ 
+        width: canvasSize.width, 
+        height: canvasSize.height,
+        maxWidth: '100%',
+        maxHeight: '100%'
+      }}
     >
       <Stage
         ref={stageRef}
@@ -88,8 +123,8 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        scaleX={zoomScale}
-        scaleY={zoomScale}
+        scaleX={displayScale * zoomScale}
+        scaleY={displayScale * zoomScale}
         x={stagePos.x}
         y={stagePos.y}
         style={{ touchAction: 'none' }}

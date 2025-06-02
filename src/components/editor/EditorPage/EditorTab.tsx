@@ -49,7 +49,7 @@ const EditorTab = ({
 
   const handleTextAdd = () => {
     const centerX = 540; // 1080 / 2
-    const centerY = 950; // 1900 / 2
+    const centerY = 900; // 1800 / 2
     
     if (!canvasData) return;
     
@@ -89,7 +89,7 @@ const EditorTab = ({
       
       img.onload = () => {
         const centerX = 540; // 1080 / 2
-        const centerY = 950; // 1900 / 2
+        const centerY = 900; // 1800 / 2
         
         const aspectRatio = img.width / img.height;
         const newWidth = 150;
@@ -120,29 +120,29 @@ const EditorTab = ({
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Zone de navigation des outils - scrollable */}
-      <div className="flex-shrink-0">
+    <div className="h-full flex flex-col">
+      {/* Zone de navigation des outils - fixe */}
+      <div className="flex-shrink-0 mb-2">
         <ToolsDrawer onTextAdd={handleTextAdd} onImageUpload={handleImageUpload} />
       </div>
       
-      {/* Zone principale - scrollable */}
-      <div className="flex-1 overflow-auto">
-        <Card className="p-4 sm:p-6 m-4">
+      {/* Zone principale - optimisée pour 1080x1800 */}
+      <div className="flex-1 overflow-hidden">
+        <Card className="h-full p-2">
           {canvasData && (
             <>
-              <div className="mb-4">
+              <div className="mb-2">
                 <CanvasControls 
                   onSave={handleSave} 
                   onBackgroundImageUpload={handleBackgroundImageUpload}
                 />
               </div>
               
-              <div className="flex justify-center bg-gray-50 rounded-lg p-4 min-h-[600px] overflow-auto">
-                <div className="relative">
+              <div className="flex justify-center bg-gray-50 rounded-lg p-2 h-[calc(100%-80px)] overflow-hidden">
+                <div className="relative max-w-full max-h-full">
                   <KonvaCanvas 
                     width={1080} 
-                    height={1900} 
+                    height={1800} 
                     initialData={{
                       ...canvasData,
                       backgroundImage: backgroundImageUrl
@@ -151,7 +151,7 @@ const EditorTab = ({
                   />
                   
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    1080 × 1900 px
+                    1080 × 1800 px
                   </div>
                 </div>
               </div>

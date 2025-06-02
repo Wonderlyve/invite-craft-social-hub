@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageContainer from "@/components/layout/PageContainer";
@@ -149,7 +148,7 @@ const EditorPage = () => {
     if (!canvasData) return;
     
     const centerX = 540; // 1080 / 2
-    const centerY = 950; // 1900 / 2
+    const centerY = 900; // 1800 / 2
     
     const updatedData = {
       ...canvasData,
@@ -187,7 +186,7 @@ const EditorPage = () => {
       
       img.onload = () => {
         const centerX = 540; // 1080 / 2
-        const centerY = 950; // 1900 / 2
+        const centerY = 900; // 1800 / 2
         
         const aspectRatio = img.width / img.height;
         const newWidth = 150;
@@ -230,7 +229,7 @@ const EditorPage = () => {
   
   return (
     <EditorProvider>
-      <PageContainer className="max-w-6xl px-0 sm:px-4 h-screen flex flex-col">
+      <PageContainer className="max-w-full px-0 sm:px-4 h-screen flex flex-col">
         {/* Header fixe */}
         <div className="flex-shrink-0">
           <Header 
@@ -245,7 +244,7 @@ const EditorPage = () => {
         {/* Contenu principal */}
         <div className="flex-1 overflow-hidden">
           <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
-            <div className="flex-shrink-0 px-4 sm:px-0 mb-4">
+            <div className="flex-shrink-0 px-4 sm:px-0 mb-2">
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="editor">Éditeur</TabsTrigger>
                 <TabsTrigger value="preview">Aperçu</TabsTrigger>

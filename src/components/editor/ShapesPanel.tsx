@@ -33,9 +33,9 @@ export default function ShapesPanel() {
     }
   };
 
-  // Centrer dans la zone de travail (1080x1900)
+  // Centrer dans la zone de travail (1080x1800)
   const centerX = 540; // 1080 / 2
-  const centerY = 950; // 1900 / 2
+  const centerY = 900; // 1800 / 2
 
   const addRectangle = () => {
     const id = `rect-${Date.now()}`;

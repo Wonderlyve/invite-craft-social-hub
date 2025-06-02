@@ -15,7 +15,7 @@ export const useLongPress = ({
 }: UseLongPressOptions) => {
   const [longPressTriggered, setLongPressTriggered] = useState(false);
   const timeout = useRef<NodeJS.Timeout>();
-  const target = useRef<EventTarget>();
+  const target = useRef<Konva.Node>();
 
   const start = useCallback(
     (event: Konva.KonvaEventObject<MouseEvent> | Konva.KonvaEventObject<TouchEvent>) => {
