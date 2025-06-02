@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import KonvaCanvas from "../KonvaCanvas";
 import CanvasControls from "../CanvasControls";
@@ -120,11 +119,9 @@ const EditorTab = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Zone de navigation des outils - fixe */}
-      <div className="flex-shrink-0 mb-2">
-        <ToolsDrawer onTextAdd={handleTextAdd} onImageUpload={handleImageUpload} />
-      </div>
+    <div className="h-full flex flex-col relative">
+      {/* Bouton outils flottant - maintenant géré par ToolsDrawer */}
+      <ToolsDrawer onTextAdd={handleTextAdd} onImageUpload={handleImageUpload} />
       
       {/* Zone principale - optimisée pour 1080x1800 */}
       <div className="flex-1 overflow-hidden">
@@ -138,7 +135,7 @@ const EditorTab = ({
                 />
               </div>
               
-              <div className="flex justify-center bg-gray-50 rounded-lg p-2 h-[calc(100%-80px)] overflow-hidden">
+              <div className="flex justify-center bg-gray-50 rounded-lg p-2 h-[calc(100%-50px)] overflow-hidden">
                 <div className="relative max-w-full max-h-full">
                   <KonvaCanvas 
                     width={1080} 

@@ -20,6 +20,27 @@ const FONT_FAMILIES = [
   "Open Sans",
   "Montserrat",
   "Playfair Display",
+  // Nouvelles typographies script et signature
+  "Dancing Script",
+  "Great Vibes",
+  "Allura",
+  "Alex Brush",
+  "Pacifico",
+  "Kaushan Script",
+  "Satisfy",
+  "Caveat",
+  "Handlee",
+  "Indie Flower",
+  "Shadows Into Light",
+  "Amatic SC",
+  "Permanent Marker",
+  "Kalam",
+  "Crafty Girls",
+  "Cookie",
+  "Yellowtail",
+  "Pinyon Script",
+  "Sacramento",
+  "Tangerine"
 ];
 
 export default function FontSelector() {
@@ -32,7 +53,7 @@ export default function FontSelector() {
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Choisir une police" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-h-60">
           {FONT_FAMILIES.map((font) => (
             <SelectItem key={font} value={font} style={{ fontFamily: font }}>
               {font}

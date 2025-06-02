@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import PageContainer from "@/components/layout/PageContainer";
 import { Loader2 } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -230,7 +230,7 @@ const EditorPage = () => {
   return (
     <EditorProvider>
       <PageContainer className="max-w-full px-0 sm:px-4 h-screen flex flex-col">
-        {/* Header fixe */}
+        {/* Header avec navigation intégrée */}
         <div className="flex-shrink-0">
           <Header 
             isSaving={isSaving} 
@@ -238,19 +238,14 @@ const EditorPage = () => {
               if (canvasData) handleSave();
             }} 
             handleShare={handleShare}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
           />
         </div>
         
         {/* Contenu principal */}
         <div className="flex-1 overflow-hidden">
-          <Tabs defaultValue="editor" value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
-            <div className="flex-shrink-0 px-4 sm:px-0 mb-2">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="editor">Éditeur</TabsTrigger>
-                <TabsTrigger value="preview">Aperçu</TabsTrigger>
-              </TabsList>
-            </div>
-            
+          <Tabs value={activeTab} onValueChange={setActiveTab as any} className="h-full flex flex-col">
             <div className="flex-1 overflow-hidden">
               <TabsContent value="editor" className="h-full">
                 <EditorTab

@@ -10,6 +10,16 @@ interface PreviewTabProps {
 }
 
 const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) => {
+  // Créer une version non-interactive du canvas data
+  const previewCanvasData = canvasData ? {
+    ...canvasData,
+    objects: canvasData.objects?.map((obj: any) => ({
+      ...obj,
+      draggable: false,
+      selectable: false
+    }))
+  } : null;
+
   return (
     <div className="flex flex-col items-center">
       <div className="mb-4 md:mb-6 text-center max-w-md">
@@ -19,38 +29,38 @@ const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) 
         </p>
       </div>
       
-      {/* Aperçu responsive avec format 1080x1920 */}
+      {/* Aperçu responsive avec format 1080x1800 */}
       <div className="border border-border rounded-md p-4 md:p-8 bg-white shadow-md max-w-full overflow-auto">
-        {canvasData ? (
+        {previewCanvasData ? (
           <div className="flex justify-center">
             <div className="relative">
               {/* Version mobile - réduite */}
               <div className="block md:hidden">
-                <div className="w-[216px] h-[384px] transform scale-100 origin-center">
+                <div className="w-[216px] h-[360px] transform scale-100 origin-center">
                   <KonvaCanvas 
                     width={1080} 
-                    height={1920} 
-                    initialData={canvasData}
-                    onSave={onSaveCanvas}
+                    height={1800} 
+                    initialData={previewCanvasData}
+                    onSave={() => {}} // Pas de sauvegarde en mode aperçu
                   />
                 </div>
               </div>
               
               {/* Version desktop - plus grande */}
               <div className="hidden md:block">
-                <div className="w-[324px] h-[576px] transform scale-100 origin-center">
+                <div className="w-[324px] h-[540px] transform scale-100 origin-center">
                   <KonvaCanvas 
                     width={1080} 
-                    height={1920} 
-                    initialData={canvasData}
-                    onSave={onSaveCanvas}
+                    height={1800} 
+                    initialData={previewCanvasData}
+                    onSave={() => {}} // Pas de sauvegarde en mode aperçu
                   />
                 </div>
               </div>
               
               {/* Indicateur de format */}
               <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                Format: 1080 × 1920 px
+                Format: 1080 × 1800 px
               </div>
             </div>
           </div>
@@ -58,7 +68,7 @@ const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) 
           <img 
             src="/placeholder.svg" 
             alt="Aperçu de l'invitation" 
-            className="w-[216px] md:w-[324px] h-[384px] md:h-[576px] object-contain"
+            className="w-[216px] md:w-[324px] h-[360px] md:h-[540px] object-contain"
           />
         )}
       </div>

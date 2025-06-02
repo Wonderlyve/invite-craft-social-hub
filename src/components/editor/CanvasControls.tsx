@@ -40,29 +40,30 @@ export default function CanvasControls({ onSave, onBackgroundImageUpload }: Canv
   };
 
   return (
-    <div className="flex items-center justify-between w-full bg-white border rounded-lg p-2 shadow-sm">
-      {/* Contrôles de zoom */}
+    <div className="flex items-center justify-between w-full bg-white border rounded-lg p-1 shadow-sm">
+      {/* Contrôles de zoom - plus compacts */}
       <div className="flex items-center space-x-1">
-        <Button variant="outline" size="sm" onClick={handleZoomOut}>
-          <ZoomOut className="h-4 w-4" />
+        <Button variant="outline" size="sm" onClick={handleZoomOut} className="h-7 w-7 p-0">
+          <ZoomOut className="h-3 w-3" />
         </Button>
-        <span className="text-xs font-medium w-16 text-center">
+        <span className="text-xs font-medium w-12 text-center">
           {Math.round(zoomScale * 100)}%
         </span>
-        <Button variant="outline" size="sm" onClick={handleZoomIn}>
-          <ZoomIn className="h-4 w-4" />
+        <Button variant="outline" size="sm" onClick={handleZoomIn} className="h-7 w-7 p-0">
+          <ZoomIn className="h-3 w-3" />
         </Button>
       </div>
 
-      {/* Contrôles centraux */}
-      <div className="flex items-center space-x-2">
+      {/* Contrôles centraux - plus compacts */}
+      <div className="flex items-center space-x-1">
         <Button 
           variant={selectedId ? "destructive" : "outline"} 
           size="sm" 
           onClick={handleDeleteSelected}
           disabled={!selectedId}
+          className="h-7 px-2"
         >
-          <Trash2 className="h-4 w-4" /> 
+          <Trash2 className="h-3 w-3" /> 
         </Button>
 
         {onBackgroundImageUpload && (
@@ -70,10 +71,11 @@ export default function CanvasControls({ onSave, onBackgroundImageUpload }: Canv
             variant="outline" 
             size="sm" 
             asChild
+            className="h-7 px-2"
           >
             <label className="flex items-center gap-1 cursor-pointer">
-              <Image className="h-4 w-4" />
-              Fond
+              <Image className="h-3 w-3" />
+              <span className="text-xs">Fond</span>
               <input 
                 type="file" 
                 className="hidden" 
@@ -85,13 +87,14 @@ export default function CanvasControls({ onSave, onBackgroundImageUpload }: Canv
         )}
       </div>
 
-      {/* Bouton sauvegarder */}
+      {/* Bouton sauvegarder - plus compact */}
       <Button 
-        className="bg-invitation-purple hover:bg-invitation-purple-dark"
+        className="bg-invitation-purple hover:bg-invitation-purple-dark h-7 px-2"
         size="sm"
         onClick={handleSave}
       >
-        <Save className="h-4 w-4 mr-1" /> Sauvegarder
+        <Save className="h-3 w-3 mr-1" /> 
+        <span className="text-xs">Sauvegarder</span>
       </Button>
     </div>
   );
