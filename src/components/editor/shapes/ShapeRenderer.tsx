@@ -10,7 +10,6 @@ interface ShapeRendererProps {
   handleObjectChange: (id: string, newProps: any) => void;
   isSelected: boolean;
   fontFamily: string;
-  isPreviewMode?: boolean;
 }
 
 const ShapeRenderer: React.FC<ShapeRendererProps> = ({ 
@@ -18,33 +17,30 @@ const ShapeRenderer: React.FC<ShapeRendererProps> = ({
   setSelectedId, 
   handleObjectChange, 
   isSelected,
-  fontFamily,
-  isPreviewMode = false
+  fontFamily
 }) => {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const longPressProps = useLongPress({
-    onLongPress: () => !isPreviewMode && setShowAdvancedOptions(true),
-    onClick: () => !isPreviewMode && setSelectedId(obj.id),
+    onLongPress: () => setShowAdvancedOptions(true),
+    onClick: () => setSelectedId(obj.id),
     delay: 800
   });
 
   const commonProps = {
     id: obj.id,
-    draggable: !isPreviewMode,
+    draggable: true,
     opacity: obj.opacity || 1,
     rotation: obj.rotation || 0,
-    onDragStart: () => !isPreviewMode && setSelectedId(obj.id),
+    onDragStart: () => setSelectedId(obj.id),
     onDragEnd: (e: any) => {
-      if (!isPreviewMode) {
-        handleObjectChange(obj.id, {
-          x: e.target.x(),
-          y: e.target.y()
-        });
-      }
+      handleObjectChange(obj.id, {
+        x: e.target.x(),
+        y: e.target.y()
+      });
     },
-    onClick: () => !isPreviewMode && setSelectedId(obj.id),
-    ...(isPreviewMode ? {} : longPressProps)
+    onClick: () => setSelectedId(obj.id),
+    ...longPressProps
   };
 
   const renderFrame = (children: React.ReactNode) => {
@@ -167,13 +163,11 @@ const ShapeRenderer: React.FC<ShapeRendererProps> = ({
   return (
     <>
       {renderShape()}
-      {!isPreviewMode && (
-        <AdvancedEditOptions
-          isOpen={showAdvancedOptions}
-          onClose={() => setShowAdvancedOptions(false)}
-          selectedObject={obj}
-        />
-      )}
+      <AdvancedEditOptions
+        isOpen={showAdvancedOptions}
+        onClose={() => setShowAdvancedOptions(false)}
+        selectedObject={obj}
+      />
     </>
   );
 };
