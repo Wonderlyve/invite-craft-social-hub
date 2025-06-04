@@ -42,6 +42,7 @@ const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) 
                     height={1800} 
                     initialData={previewCanvasData}
                     onSave={() => {}} // Pas de sauvegarde en mode aperçu
+                    isPreviewMode={true}
                   />
                 </div>
               </div>
@@ -54,6 +55,7 @@ const PreviewTab = ({ canvasData, onSaveCanvas, handleShare }: PreviewTabProps) 
                     height={1800} 
                     initialData={previewCanvasData}
                     onSave={() => {}} // Pas de sauvegarde en mode aperçu
+                    isPreviewMode={true}
                   />
                 </div>
               </div>

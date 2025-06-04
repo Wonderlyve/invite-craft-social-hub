@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Stage, Layer, Image } from "react-konva";
 import { useEditor } from "./EditorContext";
 import Konva from "konva";
@@ -13,9 +13,10 @@ interface KonvaCanvasProps {
   height: number;
   initialData?: any;
   onSave: (canvasData: any) => void;
+  isPreviewMode?: boolean;
 }
 
-const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) => {
+const KonvaCanvas = ({ width, height, initialData, onSave, isPreviewMode = false }: KonvaCanvasProps) => {
   const { 
     selectedId, 
     setSelectedId, 
@@ -85,7 +86,8 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     });
   }, [width, height, zoomScale, aspectRatio]);
 
-  const handleExportClick = () => {
+  // Sauvegarde automatique stabilisée
+  const handleExportClick = useCallback(() => {
     if (!stageRef.current) return;
     
     const canvasData = {
@@ -96,10 +98,34 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
     };
     
     onSave(canvasData);
-  };
+  }, [objects, width, height, backgroundImage, onSave]);
+
+  // Auto-save quand les objets changent
+  useEffect(() => {
+    if (objects.length > 0 && !isPreviewMode) {
+      const timeoutId = setTimeout(() => {
+        handleExportClick();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [objects, handleExportClick, isPreviewMode]);
 
   const updateBackgroundImage = (image: string) => {
     setBackgroundImage(image);
+  };
+
+  // Améliorer la désélection
+  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (isPreviewMode) return; // Pas d'interaction en mode aperçu
+    
+    // Clic sur le stage lui-même et non sur un shape
+    if (e.target === e.target.getStage()) {
+      setSelectedId(null);
+      return;
+    }
+    
+    handleStageMouseDown(e);
   };
 
   // Calculer le scale pour l'affichage
@@ -119,10 +145,10 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
         ref={stageRef}
         width={canvasSize.width}
         height={canvasSize.height}
-        onMouseDown={handleStageMouseDown}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleStageClick}
+        onTouchStart={isPreviewMode ? undefined : handleTouchStart}
+        onTouchMove={isPreviewMode ? undefined : handleTouchMove}
+        onTouchEnd={isPreviewMode ? undefined : handleTouchEnd}
         scaleX={displayScale * zoomScale}
         scaleY={displayScale * zoomScale}
         x={stagePos.x}
@@ -143,13 +169,14 @@ const KonvaCanvas = ({ width, height, initialData, onSave }: KonvaCanvasProps) =
             <ShapeRenderer
               key={obj.id}
               obj={obj}
-              setSelectedId={setSelectedId}
-              handleObjectChange={handleObjectChange}
-              isSelected={obj.id === selectedId}
+              setSelectedId={isPreviewMode ? () => {} : setSelectedId}
+              handleObjectChange={isPreviewMode ? () => {} : handleObjectChange}
+              isSelected={!isPreviewMode && obj.id === selectedId}
               fontFamily={fontFamily}
+              isPreviewMode={isPreviewMode}
             />
           ))}
-          <TransformerComponent selectedId={selectedId} />
+          {!isPreviewMode && <TransformerComponent selectedId={selectedId} />}
         </Layer>
       </Stage>
     </div>

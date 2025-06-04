@@ -1,8 +1,9 @@
+
 import { Card } from "@/components/ui/card";
 import KonvaCanvas from "../KonvaCanvas";
 import CanvasControls from "../CanvasControls";
 import ToolsDrawer from "../ToolsDrawer";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 interface EditorTabProps {
   canvasData: any;
@@ -23,6 +24,15 @@ const EditorTab = ({
     canvasData?.backgroundImage || null
   );
   
+  // Sauvegarde automatique stabilisée avec debounce
+  const handleCanvasChange = useCallback((newCanvasData: any) => {
+    onSaveCanvas(newCanvasData);
+    // Auto-save après chaque changement pour plus de stabilité
+    setTimeout(() => {
+      handleSave();
+    }, 500);
+  }, [onSaveCanvas, handleSave]);
+  
   const handleBackgroundImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -40,7 +50,7 @@ const EditorTab = ({
         backgroundImage: imageUrl
       };
       
-      onSaveCanvas(updatedCanvasData);
+      handleCanvasChange(updatedCanvasData);
     };
     
     reader.readAsDataURL(file);
@@ -71,7 +81,7 @@ const EditorTab = ({
       ]
     };
     
-    onSaveCanvas(updatedData);
+    handleCanvasChange(updatedData);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +121,7 @@ const EditorTab = ({
           ]
         };
         
-        onSaveCanvas(updatedData);
+        handleCanvasChange(updatedData);
       };
     };
     
@@ -144,7 +154,7 @@ const EditorTab = ({
                       ...canvasData,
                       backgroundImage: backgroundImageUrl
                     }}
-                    onSave={onSaveCanvas}
+                    onSave={handleCanvasChange}
                   />
                   
                   <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
