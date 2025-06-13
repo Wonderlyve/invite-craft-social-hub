@@ -10,12 +10,23 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Palette, Type, Image, Square, PanelLeft } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Palette, 
+  Type, 
+  Image, 
+  Square, 
+  PanelLeft, 
+  Layers,
+  Sparkles,
+  Settings
+} from "lucide-react";
+import AdvancedToolsPanel from "./AdvancedToolsPanel";
+import TemplateLibrary from "./TemplateLibrary";
+import ProfessionalLayersPanel from "./ProfessionalLayersPanel";
 import FontSelector from "./FontSelector";
-import ShapesPanel from "./ShapesPanel";
 import ColorModeSelector from "./ColorModeSelector";
-import LayersPanel from "./LayersPanel";
-import DecorationItems from "./DecorationItems";
+import { useEditor } from "./EditorContext";
 
 interface ToolsDrawerProps {
   onTextAdd: () => void;
@@ -24,106 +35,92 @@ interface ToolsDrawerProps {
 
 export default function ToolsDrawer({ onTextAdd, onImageUpload }: ToolsDrawerProps) {
   const [open, setOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("elements");
+  const [activeTab, setActiveTab] = useState("tools");
+  const { setObjects } = useEditor();
+
+  const handleApplyTemplate = (template: any) => {
+    setObjects(template.objects);
+    setOpen(false);
+  };
 
   return (
     <>
-      {/* Bouton flottant en bas gauche */}
+      {/* Bouton flottant en bas gauche avec un design plus professionnel */}
       <div className="fixed bottom-6 left-6 z-50">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <Button 
-              className="h-14 w-14 rounded-full bg-invitation-purple hover:bg-invitation-purple-dark text-white shadow-lg"
+              className="h-16 w-16 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
               size="lg"
             >
-              <PanelLeft className="h-6 w-6" />
+              <PanelLeft className="h-7 w-7" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[280px] sm:w-[350px] sm:max-w-md p-0 overflow-y-auto">
-            <SheetHeader className="p-3 border-b">
-              <SheetTitle className="text-lg">Outils d'édition</SheetTitle>
-              <SheetDescription className="text-sm">
-                Personnalisez votre invitation
+          <SheetContent side="left" className="w-[400px] sm:w-[450px] sm:max-w-md p-0 overflow-hidden">
+            <SheetHeader className="p-6 pb-4 bg-gradient-to-r from-purple-50 to-blue-50 border-b">
+              <SheetTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Studio d'édition professionnel
+              </SheetTitle>
+              <SheetDescription className="text-sm text-muted-foreground">
+                Créez des invitations exceptionnelles avec nos outils avancés
               </SheetDescription>
             </SheetHeader>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="px-1 py-2">
-              <TabsList className="grid grid-cols-3 w-full mx-2">
-                <TabsTrigger value="elements" className="text-xs">
-                  <Square className="h-3 w-3 mr-1" />
-                  Éléments
-                </TabsTrigger>
-                <TabsTrigger value="style" className="text-xs">
-                  <Palette className="h-3 w-3 mr-1" />
-                  Style
-                </TabsTrigger>
-                <TabsTrigger value="layers" className="text-xs">
-                  <PanelLeft className="h-3 w-3 mr-1" />
-                  Calques
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="p-2 space-y-4 max-h-[calc(100vh-150px)] overflow-y-auto">
-                <TabsContent value="elements" className="space-y-3 mt-2">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold">Ajouter des éléments</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={onTextAdd}
-                        className="justify-start text-xs"
-                      >
-                        <Type className="h-3 w-3 mr-1" />
-                        Texte
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="justify-start text-xs"
-                        asChild
-                      >
-                        <label>
-                          <Image className="h-3 w-3 mr-1" />
-                          Image
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            accept="image/*" 
-                            onChange={onImageUpload} 
-                          />
-                        </label>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold">Formes</h3>
-                    <ShapesPanel />
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold">Décorations</h3>
-                    <DecorationItems />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="style" className="space-y-3 mt-2">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold">Polices</h3>
-                    <FontSelector />
-                  </div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold">Couleurs</h3>
-                    <ColorModeSelector />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="layers" className="mt-2">
-                  <LayersPanel />
-                </TabsContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-[calc(100vh-120px)]">
+              <div className="border-b bg-white/50 backdrop-blur-sm">
+                <TabsList className="grid grid-cols-4 w-full h-12 bg-transparent">
+                  <TabsTrigger value="tools" className="text-xs font-medium">
+                    <Settings className="h-4 w-4 mr-1" />
+                    Outils
+                  </TabsTrigger>
+                  <TabsTrigger value="templates" className="text-xs font-medium">
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    Modèles
+                  </TabsTrigger>
+                  <TabsTrigger value="layers" className="text-xs font-medium">
+                    <Layers className="h-4 w-4 mr-1" />
+                    Calques
+                  </TabsTrigger>
+                  <TabsTrigger value="style" className="text-xs font-medium">
+                    <Palette className="h-4 w-4 mr-1" />
+                    Style
+                  </TabsTrigger>
+                </TabsList>
               </div>
+
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  <TabsContent value="tools" className="mt-0">
+                    <AdvancedToolsPanel />
+                  </TabsContent>
+
+                  <TabsContent value="templates" className="mt-0">
+                    <TemplateLibrary onApplyTemplate={handleApplyTemplate} />
+                  </TabsContent>
+
+                  <TabsContent value="layers" className="mt-0">
+                    <ProfessionalLayersPanel />
+                  </TabsContent>
+
+                  <TabsContent value="style" className="mt-0 space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Personnalisation du style</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <h4 className="text-sm font-medium mb-3">Typographie</h4>
+                          <FontSelector />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-sm font-medium mb-3">Couleurs et dégradés</h4>
+                          <ColorModeSelector />
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </div>
+              </ScrollArea>
             </Tabs>
           </SheetContent>
         </Sheet>
